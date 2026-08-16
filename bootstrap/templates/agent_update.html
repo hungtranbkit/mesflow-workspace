@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Update Deploy Agent — MESFlow Bootstrap{% endblock %}
+{% block content %}
+<h1>Update Deploy Agent</h1>
+<p class="muted">Upload the immutable Agent update package (<code>AGENT_UPDATE_&lt;version&gt;.zip</code>:
+  <code>agent-release.json</code> + image tar + <code>checksums.txt</code>, built by
+  <code>deploy-agent/scripts/build-agent-release.sh</code> — the same artifact the DEV → target push flow sends).
+  Bootstrap verifies every checksum and the loaded image id, guards against a downgrade, then swaps only the
+  <code>mesflow-deploy-agent</code> service in place and polls health. A failed update rolls back to the
+  previous image automatically; existing Deploy Agent data is untouched.</p>
+
+{% if core_error %}
+<div class="card"><p class="flash flash-error">{{ core_error }}</p></div>
+{% endif %}
+
+<div class="card">
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label>Package (.zip)
+      <input type="file" name="package" accept=".zip" required>
+    </label>
+    <label>Expected SHA256 of the ZIP (optional)
+      <input type="text" name="sha256" placeholder="sha256 of the whole ZIP, if you have it">
+    </label>
+    <label class="checkbox">
+      <input type="checkbox" name="allow_downgrade">
+      Allow downgrade below the currently installed version
+    </label>
+    <button type="submit" class="btn-primary" {{ 'disabled' if core_error else '' }}>Verify &amp; Update</button>
+  </form>
+</div>
+
+{% if result %}
+<div class="card">
+  <h2>Result: <span class="badge {{ 'ok' if result.status == 'SUCCESS' else 'bad' }}">{{ result.status }}</span></h2>
+  <dl>
+    <dt>From image</dt><dd>{{ result.from_image or 'unknown' }}</dd>
+    <dt>To version</dt><dd>{{ result.to_version or '-' }}</dd>
+    <dt>Restored image</dt><dd>{{ result.restored_image or '-' }}</dd>
+    <dt>Reason</dt><dd>{{ result.reason or '-' }}</dd>
+  </dl>
+  {% if result.health %}
+  <h3>Health payload</h3>
+  <pre class="log-output">{{ result.health }}</pre>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

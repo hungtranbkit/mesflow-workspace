@@ -1,0 +1,78 @@
+schema_version: 1
+
+workspace:
+  code: mesflow
+  name: MESFlow
+  description: >
+    MESFlow production/workshop MES suite: core web application, its Deploy
+    Agent, an independent QA Center, and ESP32-S3 kiosk firmware. Build Once /
+    Promote Same Artifact — see docs/operations/BUILD_AND_PROMOTE.md.
+
+# Only projects with real, independent version+build+artifact+deploy
+# evidence are listed here (see reports/PROJECTFLOW_STANDARDIZATION_ASSESSMENT.md
+# §1-2). server-agent/ exists only as an AGENTS.md placeholder (no source, no
+# build/test/deploy script, no VERSION file) and is intentionally omitted
+# until it has real lifecycle evidence. No ai-loop/ai-reviewer directory
+# exists in this repository.
+projects:
+  - code: mesflow-app
+    name: MESFlow App
+    root: mesflow
+    manifest: mesflow/PROJECT.yaml
+
+  - code: deploy-agent
+    name: Deploy Agent
+    root: deploy-agent
+    manifest: deploy-agent/PROJECT.yaml
+
+  - code: qa-center
+    name: QA Center
+    root: qa-center
+    manifest: qa-center/PROJECT.yaml
+
+  - code: esp-kiosk
+    name: ESP32 Firmware
+    root: esp-kiosk
+    manifest: esp-kiosk/PROJECT.yaml
+
+# Workspace-level shared paths that are NOT projects (no independent
+# build/version/deploy lifecycle of their own):
+shared:
+  artifacts: artifacts        # build outputs for every project above (release
+                               # ZIPs, images, checksums) -- lives outside every
+                               # project's own git repo/source root, see
+                               # mesflow/AGENTS.md Rule 8.
+  reports: reports             # audit/review/test/execution reports
+  docs: docs                   # architecture/operations/UI/test documentation
+  workspace_scripts: scripts   # workspace-wide convenience wrappers (status,
+                                # audit, promote, reconcile) that call into
+                                # each project's own scripts -- not a second
+                                # build/release engine.
+
+dependencies:
+  - source: qa-center
+    target: mesflow-app
+    type: TEST
+    evidence: "qa-center/compose.yml MESFLOW_QA_INTERNAL_URL defaults to http://mesflow-app:8080"
+
+  - source: deploy-agent
+    target: mesflow-app
+    type: DEPLOY
+    evidence: "deploy-agent/docker/compose.linux.yml WORKSHOP_MES_URL=http://mesflow-app:8080, WORKSHOP_TARGET_HOME=/opt/mesflow"
+
+  - source: deploy-agent
+    target: qa-center
+    type: DEPLOY
+    evidence: "deploy-agent/docker/compose.linux.yml MESFLOW_QA_URL=http://mesflow-qa-center:8095, QA_CENTER_SOURCE_DIR"
+
+production_policy:
+  # See mesflow/AGENTS.md "Global safety" and docs/operations/BUILD_AND_PROMOTE.md.
+  production_mutation_requires_human_approval: true
+  projectflow_direct_production_execution: false
+  build_once_promote_same_artifact: true
+  notes: >
+    Never SSH production, never deploy production, never rebuild between
+    environments. Production promotion is a human-gated UI action in the
+    Deploy Agent Release Manager; this Agent build's own
+    /api/release-manager/promote-production endpoint returns 501 (wiring
+    only, no execution) even when explicitly confirmed.

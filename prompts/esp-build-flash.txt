@@ -1,0 +1,18 @@
+Đọc AGENTS.md ở workspace root và esp-kiosk/AGENTS.md.
+
+Project: esp-kiosk/
+
+Nhiệm vụ:
+- kiểm tra Arduino CLI
+- cài/configure ESP32 core nếu thiếu
+- dò board và serial port đang kết nối
+- đọc project đầy đủ, không tách riêng .ino
+- xác định FQBN/board options từ project và phần cứng, không đoán
+- liệt kê library include và cài library thiếu nếu cần
+- compile trước
+- báo flash usage, RAM usage và warning
+- không erase flash
+- không flash nhầm khi có nhiều port
+
+Chỉ flash sau khi đã xác định rõ đúng board + đúng port.
+Sau flash, đọc serial boot log và xác nhận firmware/app version nếu firmware có in version.

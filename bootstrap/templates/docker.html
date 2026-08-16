@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Docker — MESFlow Bootstrap{% endblock %}
+{% block content %}
+<h1>Docker</h1>
+
+<div class="card">
+  <h2>Deploy Agent container</h2>
+  {% if container.exists %}
+  <dl>
+    <dt>Status</dt><dd><span class="badge {{ 'ok' if container.status == 'running' else 'warn' }}">{{ container.status }}</span></dd>
+    <dt>Image</dt><dd>{{ container.image }}</dd>
+  </dl>
+  <form method="post" action="{{ url_for('docker_container_action_route', name='mesflow-deploy-agent', action='start') }}" class="inline-form" onsubmit="return confirm('Start mesflow-deploy-agent?')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+    <button type="submit" class="btn-secondary">Start</button>
+  </form>
+  <form method="post" action="{{ url_for('docker_container_action_route', name='mesflow-deploy-agent', action='restart') }}" class="inline-form" onsubmit="return confirm('Restart mesflow-deploy-agent?')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+    <button type="submit" class="btn-secondary">Restart</button>
+  </form>
+  <form method="post" action="{{ url_for('docker_container_action_route', name='mesflow-deploy-agent', action='stop') }}" class="inline-form" onsubmit="return confirm('Stop mesflow-deploy-agent? It will become unreachable until started again.')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+    <button type="submit" class="btn-danger">Stop</button>
+  </form>
+  {% else %}
+  <p class="muted">No <code>mesflow-deploy-agent</code> container found. Use Install Deploy Agent to create it.</p>
+  {% endif %}
+  <p class="muted small">Only the Deploy Agent container can be controlled here. No prune, no volume deletion,
+    no arbitrary container removal — ever.</p>
+</div>
+
+<div class="card">
+  <h2>docker ps</h2>
+  <pre class="log-output">{{ ps.output }}</pre>
+</div>
+<div class="card">
+  <h2>docker ps -a</h2>
+  <pre class="log-output">{{ ps_all.output }}</pre>
+</div>
+<div class="card">
+  <h2>docker images</h2>
+  <pre class="log-output">{{ images.output }}</pre>
+</div>
+<div class="card">
+  <h2>docker compose ls</h2>
+  <pre class="log-output">{{ compose_ls.output }}</pre>
+</div>
+{% endblock %}

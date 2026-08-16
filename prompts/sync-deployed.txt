@@ -1,0 +1,20 @@
+Đọc AGENTS.md.
+
+Trước task mới, reconcile source deployed từ /opt về workspace.
+
+1. Xác định project.
+2. Chạy:
+   ./scripts/reconcile-from-opt.sh <project>
+3. Đọc report/diff.
+4. Nếu MATCH: tiếp tục.
+5. Nếu DIFF:
+   - xác định thay đổi deployed chưa có trong workspace;
+   - import có chọn lọc;
+   - không copy .env/runtime/data/log/cert/secret;
+   - giữ workspace-only changes;
+   - nếu conflict thì STOP;
+   - nếu là Git repo, commit reconciliation riêng trước task mới.
+6. Không sửa /opt.
+7. Không production deploy.
+
+Sau reconcile mới làm task người dùng yêu cầu.

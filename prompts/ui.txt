@@ -1,0 +1,17 @@
+Đọc AGENTS.md ở workspace root.
+
+Project chính: mesflow/
+
+Task:
+<MÔ TẢ>
+
+Áp dụng MESFlow UI rules:
+- Full HD 1920x1080
+- responsive
+- không overflow/chồng chữ
+- ưu tiên master/detail khi bảng quá rộng
+- giữ context/filter khi scroll
+- tiếng Việt thân thiện
+- không đổi business logic ngoài scope
+- không deploy production
+- test và báo evidence

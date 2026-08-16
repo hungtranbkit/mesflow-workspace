@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Install Deploy Agent — MESFlow Bootstrap{% endblock %}
+{% block content %}
+<h1>Install / Update Deploy Agent</h1>
+<p class="muted">Upload the Deploy Agent installer package (the ZIP produced by
+  <code>deploy-agent/package_installer.sh</code>: top-level <code>install.sh</code> +
+  <code>payload/mesflow-deploy-agent/</code>). Bootstrap validates it, guards against an
+  accidental downgrade, then runs the package's own installer exactly as an operator would
+  over SSH — it never re-implements Deploy Agent's build/rollback logic. Existing
+  <code>/var/lib/mesflow-deploy-agent</code> data is preserved.</p>
+
+<div class="card">
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label>Package (.zip)
+      <input type="file" name="package" accept=".zip" required>
+    </label>
+    <label>Expected SHA256 (optional)
+      <input type="text" name="sha256" placeholder="sha256 of the ZIP, if you have it">
+    </label>
+    <label class="checkbox">
+      <input type="checkbox" name="allow_downgrade">
+      Allow downgrade below the currently installed version ({{ snap.deploy_agent.installed_version or 'none installed' }})
+    </label>
+    <button type="submit" class="btn-primary">Validate &amp; Install</button>
+  </form>
+</div>
+
+{% if result %}
+<div class="card">
+  <h2>Result: <span class="badge {{ 'ok' if result['pass'] else 'bad' }}">{{ 'PASS' if result['pass'] else 'FAILED' }}</span></h2>
+  <dl>
+    <dt>Uploaded version</dt><dd>{{ result.version }}</dd>
+    <dt>Previous version</dt><dd>{{ result.previous_version or 'none' }}</dd>
+    <dt>Installer exit</dt><dd><span class="badge {{ 'ok' if result.run.ok else 'bad' }}">{{ 'ok' if result.run.ok else 'failed (rc=' ~ result.run.rc ~ ')' }}</span></dd>
+    <dt>Health after install</dt><dd><span class="badge {{ 'ok' if result.health.healthy else 'bad' }}">{{ 'healthy' if result.health.healthy else 'not healthy' }}</span></dd>
+  </dl>
+  <h3>Installer output</h3>
+  <pre class="log-output">{{ result.run.output }}</pre>
+</div>
+{% endif %}
+{% endblock %}

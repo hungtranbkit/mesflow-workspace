@@ -1,0 +1,14 @@
+Đọc AGENTS.md, docs/ui/MESFLOW_UI_STANDARD.md và reports/UI_AUDIT.md.
+Thực hiện batch UI: <BATCH>
+- giữ business logic/API ngoài scope
+- Full HD 1920x1080 first
+- responsive
+- không horizontal overflow
+- không AI-generic UI
+- dùng design tokens/pattern thống nhất
+- tiếng Việt thân thiện
+- test syntax + focused flow
+- screenshot audit
+- cập nhật reports/UI_REFACTOR_REPORT.md
+- không production deploy
+- nếu tạo release ZIP mới thì tăng version và đồng bộ version declarations

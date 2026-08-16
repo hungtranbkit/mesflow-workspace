@@ -1,0 +1,14 @@
+Đọc AGENTS.md và docs/ui/MESFLOW_UI_STANDARD.md.
+Project chính: mesflow/
+Thực hiện Global UI/UX Audit trước, chưa sửa code ở bước đầu.
+1. Dò toàn bộ navigation/page/render function/CSS/component.
+2. Lập inventory màn hình và component.
+3. Chấm layout, typography, spacing, hierarchy, contrast, responsive, overflow, interaction, terminology, duplicate styles/components.
+4. Xác định màn nào giữ table, màn nào nên master/detail.
+5. Xác định design token/component nên chuẩn hóa.
+6. Chia việc thành 4 batch theo MESFLOW_UI_STANDARD.md.
+7. Tạo reports/UI_AUDIT.md.
+8. Không sửa business logic.
+9. Không deploy production.
+10. Chờ review audit trước khi global refactor lớn.
+Report phải chỉ ra file/function cụ thể làm evidence.

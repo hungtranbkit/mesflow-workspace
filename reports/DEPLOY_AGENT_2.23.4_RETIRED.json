@@ -1,0 +1,10 @@
+{
+  "component": "DEPLOY_AGENT",
+  "version": "2.23.4-docker-runtime",
+  "image": "mesflow-deploy-agent:2.23.4",
+  "image_digest": "sha256:b886ddad602e6aea0af86291a6895142084c0e62883345c0031a196c0fdba50b",
+  "status": "RETIRED",
+  "reason": "Local verification failed: image ran as mesflow-agent while the preserved /data runtime is root-owned 0700.",
+  "rollback": "SUCCESS: mesflow-deploy-agent:2.23.1-docker-runtime restored healthy",
+  "rebuild_same_version_allowed": false
+}

@@ -1,0 +1,5 @@
+Đọc AGENTS.md và docs/ui/MESFLOW_UI_STANDARD.md.
+Review riêng màn: <SCREEN>
+Không sửa code trước.
+Đánh giá: mục tiêu người dùng, hierarchy, density, table vs master/detail, filter/context, typography, spacing, states, error prevention, accessibility, Full HD, responsive, số click, tiếng Việt/thuật ngữ.
+Đề xuất theo P0 correctness/usability, P1 workflow, P2 visual consistency, P3 polish.

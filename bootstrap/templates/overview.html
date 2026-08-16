@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Overview — MESFlow Bootstrap{% endblock %}
+{% block content %}
+<h1>Overview</h1>
+
+{% if snap.deploy_agent.health.healthy %}
+<div class="card recovery-card">
+  <div class="recovery-status ok">Deploy Agent Healthy</div>
+  <p class="muted">Version {{ snap.deploy_agent.health.version or snap.deploy_agent.installed_version or 'unknown' }}
+    &middot; running via {{ snap.deploy_agent.runtime.method }}</p>
+  <a class="btn-primary" href="http://{{ snap.ip }}:8090/agent/" target="_blank" rel="noopener">Open Deploy Agent</a>
+  <p class="muted small">Bootstrap is now a minimal recovery console. Use Docker / Services / Logs / Commands only
+    if something goes wrong — day-to-day operations belong in the Deploy Agent itself.</p>
+</div>
+{% else %}
+<div class="card recovery-card">
+  <div class="recovery-status {{ 'warn' if snap.deploy_agent.installed else 'bad' }}">
+    {% if not snap.deploy_agent.installed %}Deploy Agent Not Installed
+    {% elif not snap.deploy_agent.runtime.running %}Deploy Agent Stopped
+    {% else %}Deploy Agent Unhealthy{% endif %}
+  </div>
+  <div class="recovery-actions">
+    {% if not snap.deploy_agent.installed %}
+      <a class="btn-primary" href="{{ url_for('install_agent') }}">Install Deploy Agent</a>
+    {% elif not snap.deploy_agent.runtime.running %}
+      <a class="btn-primary" href="{{ url_for('docker_page') }}">Start Deploy Agent</a>
+    {% else %}
+      <a class="btn-secondary" href="{{ url_for('logs_page') }}">View logs</a>
+      <a class="btn-secondary" href="{{ url_for('docker_page') }}">Restart Deploy Agent</a>
+      <a class="btn-primary" href="{{ url_for('install_agent') }}">Reinstall / update package</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="grid">
+  <div class="card">
+    <h2>Host</h2>
+    <dl>
+      <dt>Hostname</dt><dd>{{ snap.hostname }}</dd>
+      <dt>IP</dt><dd>{{ snap.ip }}</dd>
+      <dt>OS</dt><dd>{{ snap.os_name }}{% if not snap.os_supported %} <span class="badge warn">unsupported</span>{% endif %}</dd>
+      <dt>Uptime</dt><dd>{{ snap.uptime }}</dd>
+      <dt>CPU</dt><dd>{{ snap.cpu_count }} cores &middot; load {{ '%.2f'|format(snap.load_avg['1m']) if snap.load_avg['1m'] is not none else '?' }}</dd>
+      <dt>RAM</dt><dd>{{ snap.mem.available_mb }} / {{ snap.mem.total_mb }} MB free</dd>
+      <dt>Disk (/)</dt><dd>{{ snap.disk.free_gb }} / {{ snap.disk.total_gb }} GB free</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Docker</h2>
+    <dl>
+      <dt>Installed</dt><dd><span class="badge {{ 'ok' if snap.docker.installed else 'bad' }}">{{ 'yes' if snap.docker.installed else 'no' }}</span></dd>
+      <dt>Running</dt><dd><span class="badge {{ 'ok' if snap.docker.running else 'bad' }}">{{ 'yes' if snap.docker.running else 'no' }}</span></dd>
+      <dt>Version</dt><dd>{{ snap.docker.version or 'unknown' }}</dd>
+      <dt>Compose plugin</dt><dd><span class="badge {{ 'ok' if snap.compose else 'bad' }}">{{ 'yes' if snap.compose else 'no' }}</span></dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>SSH</h2>
+    <dl>
+      <dt>Installed</dt><dd><span class="badge {{ 'ok' if snap.ssh.installed else 'bad' }}">{{ 'yes' if snap.ssh.installed else 'no' }}</span></dd>
+      <dt>State</dt><dd><span class="badge {{ 'ok' if snap.ssh.active else 'warn' }}">{{ snap.ssh.state }}</span></dd>
+      <dt>Port</dt><dd>{{ snap.ssh.port }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Deploy Agent</h2>
+    <dl>
+      <dt>Installed</dt><dd><span class="badge {{ 'ok' if snap.deploy_agent.installed else 'bad' }}">{{ 'yes' if snap.deploy_agent.installed else 'no' }}</span></dd>
+      <dt>Version</dt><dd>{{ snap.deploy_agent.health.version or snap.deploy_agent.installed_version or 'n/a' }}</dd>
+      <dt>Runtime</dt><dd>{{ snap.deploy_agent.runtime.method }} ({{ snap.deploy_agent.runtime.detail or '-' }})</dd>
+      <dt>Status</dt><dd><span class="badge {{ 'ok' if snap.deploy_agent.health.healthy else 'bad' }}">{{ 'Healthy' if snap.deploy_agent.health.healthy else 'Not healthy' }}</span></dd>
+    </dl>
+    {% if snap.deploy_agent.error %}
+    <p class="flash flash-error small">Last container error: {{ snap.deploy_agent.error }}</p>
+    {% endif %}
+
+    {% if not snap.deploy_agent.installed %}
+    <a class="btn-primary" href="{{ url_for('install_agent') }}">Install Deploy Agent</a>
+    {% else %}
+    <div class="recovery-actions">
+      <a class="btn-secondary" href="http://{{ snap.ip }}:8090/agent/" target="_blank" rel="noopener">Open Agent</a>
+      <a class="btn-secondary" href="{{ url_for('agent_update_page') }}">Update</a>
+      <a class="btn-secondary" href="{{ url_for('agent_logs_page') }}">Logs</a>
+      <form method="post" action="{{ url_for('docker_container_action_route', name='mesflow-deploy-agent', action='restart') }}" class="inline-form" onsubmit="return confirm('Restart mesflow-deploy-agent?')">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+        <button type="submit" class="btn-secondary">Restart</button>
+      </form>
+    </div>
+    <details class="advanced">
+      <summary class="muted small">Advanced</summary>
+      <form method="post" action="{{ url_for('agent_rollback_route') }}" class="inline-form" onsubmit="return confirm('Roll back Deploy Agent to the previous image? This restarts the Agent.')">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+        <button type="submit" class="btn-danger" {{ 'disabled' if not snap.deploy_agent.rollback_available else '' }}>Rollback</button>
+      </form>
+      {% if not snap.deploy_agent.rollback_available %}<p class="muted small">No previous image recorded yet by Bootstrap (only available after an Update run from here).</p>{% endif %}
+    </details>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+Đọc AGENTS.md.
+
+Review luồng xuyên project:
+MESFlow core <-> Deploy Agent <-> QA Center <-> ESP Kiosk.
+
+Không sửa code trước.
+Xác định:
+1. project nào sở hữu lỗi
+2. interface/API liên quan
+3. rủi ro tương thích
+4. test cần chạy ở từng project
+5. migration/version implications
+6. production action required hay không

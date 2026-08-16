@@ -1,0 +1,28 @@
+# This is the OUTER workspace repo. It owns bootstrap/, server-agent/,
+# docs/, scripts/, config/, prompts/, reports/, test-data/ and the
+# top-level workspace files. Everything below is either an independent
+# project with its own git repo (never nested/tracked here -- see
+# AGENTS.md "Project boundary rule") or local/generated/runtime content
+# that RULE 8 in AGENTS.md says does not belong in a source repository.
+
+# Independent sibling repos -- each has its own .git/main/remote.
+# Never track their working trees inside this repo.
+/mesflow/
+/deploy-agent/
+/qa-center/
+/mesflow-web/
+/esp-kiosk/
+
+# Generated release artifacts / build output -- never source.
+/artifacts/
+*.zip
+
+# Reconcile/runtime scratch dumps -- regenerated on demand, not source.
+/.reconcile/
+/tmp/
+
+# Local dev-tool state, not part of the project.
+.aider*
+.pytest_cache/
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

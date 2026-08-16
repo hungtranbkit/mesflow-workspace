@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Initial Setup — MESFlow Bootstrap{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <h1>Initial Admin Setup</h1>
+  <p class="muted">This runs once. Find the setup token on this server at
+    <code>{{ config.get('SETUP_TOKEN_PATH', '/var/lib/mesflow-bootstrap/SETUP_TOKEN.txt') }}</code>
+    (readable by root only): <code>sudo cat /var/lib/mesflow-bootstrap/SETUP_TOKEN.txt</code></p>
+  {% if not token_exists %}
+    <p class="flash flash-error">No setup token file found — it may already have been used. Re-run
+      <code>install.sh</code> on the server to generate a new one, or sign in if setup already completed.</p>
+  {% endif %}
+  {% if error %}<p class="flash flash-error">{{ error }}</p>{% endif %}
+  <form method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label>Setup token
+      <input type="text" name="token" autocomplete="off" required>
+    </label>
+    <label>Admin username
+      <input type="text" name="username" autocomplete="username" required minlength="3">
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="new-password" required minlength="10">
+    </label>
+    <label>Confirm password
+      <input type="password" name="confirm" autocomplete="new-password" required minlength="10">
+    </label>
+    <button type="submit" class="btn-primary">Create admin account</button>
+  </form>
+</div>
+{% endblock %}

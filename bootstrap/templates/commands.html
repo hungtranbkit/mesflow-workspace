@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Commands — MESFlow Bootstrap{% endblock %}
+{% block content %}
+<h1>Safe Commands</h1>
+<p class="muted">Allowlisted, read-only diagnostic commands only. Each run is timeout-bounded, output-bounded and
+  recorded in the audit log. No arbitrary shell is exposed.</p>
+
+<div class="card">
+  <form method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label>Command
+      <select name="key" required>
+        {% for c in commands %}
+        <option value="{{ c }}" {{ 'selected' if c == selected else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit" class="btn-primary">Run</button>
+  </form>
+</div>
+
+{% if result %}
+<div class="card">
+  <h2>{{ selected }} <span class="badge {{ 'ok' if result.ok else 'bad' }}">rc={{ result.rc }}</span></h2>
+  <pre class="log-output">{{ result.output }}</pre>
+</div>
+{% endif %}
+{% endblock %}

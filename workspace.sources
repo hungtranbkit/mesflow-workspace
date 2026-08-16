@@ -1,0 +1,6 @@
+MESFLOW_SRC=/opt/mesflow
+DEPLOY_AGENT_SRC=/opt/mesflow-deploy-agent
+QA_CENTER_SRC=/opt/mesflow-qa-center
+ESP_KIOSK_SRC=
+SERVER_AGENT_SRC=
+CREATED_AT=2026-08-12T11:21:48+07:00

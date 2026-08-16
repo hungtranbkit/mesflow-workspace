@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MESFlow Bootstrap{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% if current_user %}
+  <header class="topbar">
+    <div class="brand">MESFlow <span>Bootstrap</span></div>
+    <nav>
+      <a href="{{ url_for('overview') }}" class="{{ 'active' if request.endpoint == 'overview' else '' }}">Overview</a>
+      <a href="{{ url_for('install_agent') }}" class="{{ 'active' if request.endpoint == 'install_agent' else '' }}">Install Deploy Agent</a>
+      <a href="{{ url_for('docker_page') }}" class="{{ 'active' if request.endpoint == 'docker_page' else '' }}">Docker</a>
+      <a href="{{ url_for('services_page') }}" class="{{ 'active' if request.endpoint == 'services_page' else '' }}">Services</a>
+      <a href="{{ url_for('logs_page') }}" class="{{ 'active' if request.endpoint == 'logs_page' else '' }}">Logs</a>
+      <a href="{{ url_for('commands_page') }}" class="{{ 'active' if request.endpoint == 'commands_page' else '' }}">Commands</a>
+    </nav>
+    <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <span class="user">{{ current_user }}</span>
+      <button type="submit" class="btn-link">Sign out</button>
+    </form>
+  </header>
+  {% endif %}
+  <main class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">mesflow-bootstrap v{{ bootstrap_version }} &middot; independent of Docker/MESFlow/Deploy Agent</footer>
+</body>
+</html>

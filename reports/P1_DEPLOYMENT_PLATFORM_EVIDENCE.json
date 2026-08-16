@@ -1,0 +1,22 @@
+{
+  "artifact": {
+    "filename": "mesflow-deploy-agent-source-2.23.3-docker-runtime.zip",
+    "file_count": 101,
+    "sha256": "6997f5515d024e19bcb770d2647ad5abf40d63cb016a434976b27ce06e24f2a5",
+    "size_bytes": 236510,
+    "version": "2.23.3-docker-runtime"
+  },
+  "component_contract": {
+    "DEPLOY_AGENT": "PASS",
+    "MESFLOW": "PASS",
+    "QA_CENTER": "PASS"
+  },
+  "live_test_deployment": "NOT_RUN",
+  "production_mutation": false,
+  "status": "PARTIAL",
+  "tests": {
+    "baseline": {"failed": 0, "passed": 188, "status": "PASS"},
+    "extracted_source_p1": {"failed": 0, "passed": 20, "status": "PASS"},
+    "focused_deployment": {"failed": 0, "passed": 50, "status": "PASS"}
+  }
+}

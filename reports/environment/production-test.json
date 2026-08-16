@@ -1,0 +1,494 @@
+{
+  "format_version": 1,
+  "profile": "production-test",
+  "generated_at": "2026-08-12T07:15:21.297055+00:00",
+  "host": "vps-78ae7aec",
+  "os": "Ubuntu 25.04",
+  "architecture": "x86_64",
+  "docker": "29.2.1",
+  "compose": "5.0.2",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "locale": "C.UTF-8",
+  "postgres": "17.10",
+  "postgres_major": "17",
+  "application_version": "65.8.44.51",
+  "schema": "65.8.44.46",
+  "migration_head": "0026_night_shift_same_day_midnight",
+  "agent": "2.12.9-docker-runtime",
+  "qa": "1.19.0",
+  "services": [
+    "mesflow-app",
+    "mesflow-postgres",
+    "mesflow-deploy-agent",
+    "mesflow-testcenter",
+    "mesflow-nginx"
+  ],
+  "containers": {
+    "mesflow-app": {
+      "present": true,
+      "image": "mesflow-app:65.8.44.51",
+      "running": true,
+      "health": "healthy",
+      "restart": "unless-stopped",
+      "env_keys": [
+        "DATABASE_URL",
+        "GPG_KEY",
+        "MESFLOW_ADMIN_PASSWORD",
+        "MESFLOW_ADMIN_USERNAME",
+        "MESFLOW_ALLOW_PRIVATE_HTTP_IDENTITY",
+        "MESFLOW_ENABLE_FORCE_DELETE_PO",
+        "MESFLOW_ENV",
+        "MESFLOW_ESP_DISCOVERY",
+        "MESFLOW_ESP_DISCOVERY_HOST",
+        "MESFLOW_ESP_DISCOVERY_PORT",
+        "MESFLOW_INTERNAL_HTTP_SESSION",
+        "MESFLOW_INTERNAL_QA_AUTO_LOGIN",
+        "MESFLOW_LOCAL_AUTO_LOGIN",
+        "MESFLOW_LOG_RETENTION_BATCH_SIZE",
+        "MESFLOW_LOG_RETENTION_ENABLED",
+        "MESFLOW_LOG_RETENTION_ERROR_TRACE_RESOLVED_DAYS",
+        "MESFLOW_LOG_RETENTION_ERROR_TRACE_UNRESOLVED_DAYS",
+        "MESFLOW_LOG_RETENTION_RESOLVED_ERROR_DAYS",
+        "MESFLOW_LOG_RETENTION_SECURITY_DAYS",
+        "MESFLOW_LOG_RETENTION_SLOW_DAYS",
+        "MESFLOW_LOG_RETENTION_SUCCESS_DAYS",
+        "MESFLOW_LOG_RETENTION_UNRESOLVED_ERROR_DAYS",
+        "MESFLOW_TEST_AUTO_LOGIN",
+        "MESFLOW_TEST_AUTO_LOGIN_USERNAME",
+        "MESFLOW_TIMEZONE",
+        "MESFLOW_TRUSTED_PROXY_COUNT",
+        "MESFLOW_TUTORIAL_DIR",
+        "PATH",
+        "POSTGRES_DB",
+        "POSTGRES_PASSWORD",
+        "POSTGRES_USER",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONUNBUFFERED",
+        "PYTHON_SHA256",
+        "PYTHON_VERSION",
+        "TZ",
+        "WORKSHOP_APP_MODE",
+        "WORKSHOP_BACKUP_ENABLED",
+        "WORKSHOP_BACKUP_INTERVAL_HOURS",
+        "WORKSHOP_BACKUP_RETENTION_DAYS",
+        "WORKSHOP_BACKUP_UPLOADS",
+        "WORKSHOP_CONFIG_DIR",
+        "WORKSHOP_COOKIE_SECURE",
+        "WORKSHOP_DATABASE_URL",
+        "WORKSHOP_DATA_DIR",
+        "WORKSHOP_DB_BACKEND",
+        "WORKSHOP_DB_PATH",
+        "WORKSHOP_DISK_WARNING_PERCENT",
+        "WORKSHOP_HOME",
+        "WORKSHOP_HOST",
+        "WORKSHOP_LOG_LEVEL",
+        "WORKSHOP_PORT",
+        "WORKSHOP_REQUIRE_FIRST_PASSWORD_CHANGE",
+        "WORKSHOP_SECRET_KEY",
+        "WORKSHOP_WAITRESS_CONNECTION_LIMIT",
+        "WORKSHOP_WAITRESS_THREADS"
+      ],
+      "mounts": [
+        {
+          "destination": "/data/uploads",
+          "type": "bind",
+          "rw": true
+        },
+        {
+          "destination": "/data/backups",
+          "type": "bind",
+          "rw": true
+        },
+        {
+          "destination": "/data/tutorials",
+          "type": "bind",
+          "rw": false
+        }
+      ],
+      "networks": [
+        "mesflow-edge",
+        "mesflow_network"
+      ],
+      "ports": [
+        "127.0.0.1:8080->8080/tcp"
+      ],
+      "healthcheck": [
+        "CMD",
+        "curl",
+        "-fsS",
+        "http://127.0.0.1:8080/api/system/ready"
+      ]
+    },
+    "mesflow-postgres": {
+      "present": true,
+      "image": "postgres:17-alpine",
+      "running": true,
+      "health": "healthy",
+      "restart": "unless-stopped",
+      "env_keys": [
+        "DATABASE_URL",
+        "DOCKER_PG_LLVM_DEPS",
+        "GOSU_VERSION",
+        "LANG",
+        "MESFLOW_ADMIN_PASSWORD",
+        "MESFLOW_ADMIN_USERNAME",
+        "MESFLOW_ALLOW_PRIVATE_HTTP_IDENTITY",
+        "MESFLOW_ESP_DISCOVERY",
+        "MESFLOW_ESP_DISCOVERY_HOST",
+        "MESFLOW_ESP_DISCOVERY_PORT",
+        "PATH",
+        "PGDATA",
+        "PGTZ",
+        "PG_MAJOR",
+        "PG_SHA256",
+        "PG_VERSION",
+        "POSTGRES_DB",
+        "POSTGRES_PASSWORD",
+        "POSTGRES_USER",
+        "TZ",
+        "WORKSHOP_APP_MODE",
+        "WORKSHOP_BACKUP_ENABLED",
+        "WORKSHOP_BACKUP_INTERVAL_HOURS",
+        "WORKSHOP_BACKUP_RETENTION_DAYS",
+        "WORKSHOP_BACKUP_UPLOADS",
+        "WORKSHOP_CONFIG_DIR",
+        "WORKSHOP_COOKIE_SECURE",
+        "WORKSHOP_DATABASE_URL",
+        "WORKSHOP_DATA_DIR",
+        "WORKSHOP_DB_BACKEND",
+        "WORKSHOP_DB_PATH",
+        "WORKSHOP_DISK_WARNING_PERCENT",
+        "WORKSHOP_HOME",
+        "WORKSHOP_HOST",
+        "WORKSHOP_LOG_LEVEL",
+        "WORKSHOP_PORT",
+        "WORKSHOP_REQUIRE_FIRST_PASSWORD_CHANGE",
+        "WORKSHOP_SECRET_KEY",
+        "WORKSHOP_WAITRESS_CONNECTION_LIMIT",
+        "WORKSHOP_WAITRESS_THREADS"
+      ],
+      "mounts": [
+        {
+          "destination": "/var/lib/postgresql/data",
+          "type": "bind",
+          "rw": true
+        },
+        {
+          "destination": "/backups",
+          "type": "bind",
+          "rw": true
+        }
+      ],
+      "networks": [
+        "mesflow_network"
+      ],
+      "ports": [],
+      "healthcheck": [
+        "CMD-SHELL",
+        "pg_isready -U mesflow -d mesflow"
+      ]
+    },
+    "mesflow-deploy-agent": {
+      "present": true,
+      "image": "mesflow-deploy-agent:2.12.9",
+      "running": true,
+      "health": "unhealthy",
+      "restart": "unless-stopped",
+      "env_keys": [
+        "GPG_KEY",
+        "MESFLOW_AGENT_DEPLOY_ENABLED",
+        "MESFLOW_AGENT_HOST_OPS_ENABLED",
+        "MESFLOW_AGENT_RUNTIME",
+        "MESFLOW_QA_URL",
+        "PATH",
+        "PYTHONUNBUFFERED",
+        "PYTHONUTF8",
+        "PYTHON_SHA256",
+        "PYTHON_VERSION",
+        "WORKSHOP_AGENT_HOME",
+        "WORKSHOP_AGENT_HOST",
+        "WORKSHOP_AGENT_PORT",
+        "WORKSHOP_AGENT_URL_PREFIX",
+        "WORKSHOP_MES_URL",
+        "WORKSHOP_TARGET_HOME"
+      ],
+      "mounts": [
+        {
+          "destination": "/opt/mesflow",
+          "type": "bind",
+          "rw": true
+        },
+        {
+          "destination": "/opt/mesflow-qa-center",
+          "type": "bind",
+          "rw": true
+        },
+        {
+          "destination": "/data",
+          "type": "bind",
+          "rw": true
+        },
+        {
+          "destination": "/var/run/docker.sock",
+          "type": "bind",
+          "rw": true
+        }
+      ],
+      "networks": [
+        "mesflow-edge"
+      ],
+      "ports": [
+        "127.0.0.1:8090->8090/tcp"
+      ],
+      "healthcheck": [
+        "CMD-SHELL",
+        "wget -qO- http://127.0.0.1:8090/agent/health >/dev/null || exit 1"
+      ]
+    },
+    "mesflow-qa-center": {
+      "present": false
+    },
+    "mesflow-testcenter": {
+      "present": true,
+      "image": "mesflow-testcenter:1.0",
+      "running": false,
+      "health": "unhealthy",
+      "restart": "unless-stopped",
+      "env_keys": [
+        "GPG_KEY",
+        "MESFLOW_ADMIN_PASSWORD",
+        "MESFLOW_ADMIN_USERNAME",
+        "MESFLOW_BASE_URL",
+        "MESFLOW_DOCKER_NETWORK",
+        "MESFLOW_VERIFY_TLS",
+        "PATH",
+        "POSTGRES_DSN",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONUNBUFFERED",
+        "PYTHON_SHA256",
+        "PYTHON_VERSION",
+        "TESTCENTER_PASSWORD",
+        "TESTCENTER_SECRET_KEY",
+        "TESTCENTER_USERNAME",
+        "TEST_TIMEOUT_SECONDS",
+        "TZ"
+      ],
+      "mounts": [
+        {
+          "destination": "/reports",
+          "type": "bind",
+          "rw": true
+        },
+        {
+          "destination": "/data",
+          "type": "bind",
+          "rw": true
+        }
+      ],
+      "networks": [
+        "mesflow_default"
+      ],
+      "ports": [],
+      "healthcheck": [
+        "CMD",
+        "curl",
+        "-fsS",
+        "http://127.0.0.1:8095/api/health"
+      ]
+    },
+    "mesflow-nginx": {
+      "present": true,
+      "image": "nginx:1.28-alpine",
+      "running": true,
+      "health": "healthy",
+      "restart": "unless-stopped",
+      "env_keys": [
+        "ACME_VERSION",
+        "DYNPKG_RELEASE",
+        "NGINX_VERSION",
+        "NJS_RELEASE",
+        "NJS_VERSION",
+        "PATH",
+        "PKG_RELEASE",
+        "TZ"
+      ],
+      "mounts": [
+        {
+          "destination": "/etc/nginx/nginx.conf",
+          "type": "bind",
+          "rw": false
+        },
+        {
+          "destination": "/etc/nginx/certs",
+          "type": "bind",
+          "rw": false
+        }
+      ],
+      "networks": [
+        "mesflow-edge"
+      ],
+      "ports": [
+        "0.0.0.0:443->443/tcp",
+        "0.0.0.0:80->80/tcp",
+        ":::443->443/tcp",
+        ":::80->80/tcp"
+      ],
+      "healthcheck": [
+        "CMD",
+        "wget",
+        "-qO-",
+        "http://127.0.0.1/nginx-health"
+      ]
+    }
+  },
+  "networks": [
+    "bridge",
+    "host",
+    "loki-stack_default",
+    "mesflow-edge",
+    "mesflow-testcenter_default",
+    "mesflow_default",
+    "mesflow_network",
+    "none"
+  ],
+  "volumes": [],
+  "health": {
+    "application": {
+      "ok": true,
+      "status": 200,
+      "payload": {
+        "database": "mesflow",
+        "database_backend": "postgresql",
+        "database_user": "mesflow",
+        "deployment_id": "",
+        "ok": true,
+        "phase": "production-ready",
+        "postgres_version": "17.10",
+        "schema_version": "65.8.44.46",
+        "status": "healthy",
+        "version": "65.8.44.51"
+      }
+    },
+    "ready": {
+      "ok": true,
+      "status": 200,
+      "payload": {
+        "checked_at": "Wed, 12 Aug 2026 07:15:15 GMT",
+        "migration_head": "0026_night_shift_same_day_midnight",
+        "ok": true,
+        "schema_version": "65.8.44.46",
+        "status": "ready",
+        "version": "65.8.44.51"
+      }
+    },
+    "agent": {
+      "ok": true,
+      "status": 200,
+      "payload": {
+        "agent_version": "2.12.9-docker-runtime",
+        "deploy_enabled": true,
+        "host_ops_enabled": false,
+        "job_running": false,
+        "mes": {
+          "api_online": true,
+          "deployment_id": "",
+          "docker": {
+            "available": true,
+            "container_id": "de914e0af2a4eb8ca74f62453753fc7105561e11b0424fd47db48ae6c2a58b81",
+            "container_ids": {
+              "mesflow": "de914e0af2a4eb8ca74f62453753fc7105561e11b0424fd47db48ae6c2a58b81",
+              "postgres": "5e644654a0790a67fbb7f5e7106757e68f85e2b131358bdac296e611b68e3fa3"
+            },
+            "health": "healthy",
+            "healthy": true,
+            "running": true,
+            "service_health": {
+              "mesflow": "healthy",
+              "postgres": "healthy"
+            },
+            "services": [
+              "mesflow",
+              "postgres"
+            ],
+            "stderr": ""
+          },
+          "health_payload": {
+            "_agent_base_url": "http://mesflow-app:8080",
+            "database": "mesflow",
+            "database_backend": "postgresql",
+            "database_user": "mesflow",
+            "deployment_id": "",
+            "ok": true,
+            "phase": "production-ready",
+            "postgres_version": "17.10",
+            "schema_version": "65.8.44.46",
+            "status": "healthy",
+            "version": "65.8.44.51"
+          },
+          "health_state": "healthy",
+          "healthy": true,
+          "online": true,
+          "version": "65.8.44.51",
+          "version_payload": {
+            "_agent_base_url": "http://mesflow-app:8080",
+            "architecture": "postgres-native",
+            "database_backend": "postgresql",
+            "deployment_id": "",
+            "phase": "production-ready",
+            "version": "65.8.44.51"
+          }
+        },
+        "ok": true,
+        "qa": {
+          "home": "/opt/mesflow-qa-center",
+          "online": false,
+          "payload": {
+            "error": "<urlopen error [Errno -3] Try again>",
+            "ok": false
+          },
+          "port": 8095,
+          "service_active": false,
+          "service_pid": 0,
+          "version": "1.19.0"
+        },
+        "qa_job_running": false,
+        "runtime_mode": "docker-linux",
+        "tutorial_job_running": false
+      }
+    },
+    "qa": {
+      "ok": true,
+      "status": 200,
+      "payload": {
+        "app": "MESFlow QA Center",
+        "ok": true,
+        "version": "1.19.0"
+      }
+    }
+  },
+  "env": {
+    "path": "/opt/mesflow/.env",
+    "present": true,
+    "mode": "600",
+    "keys": []
+  },
+  "paths": {
+    "/opt/mesflow/runtime": {
+      "present": true,
+      "mode": "755"
+    },
+    "/opt/mesflow/runtime/tutorials": {
+      "present": true,
+      "mode": "755"
+    },
+    "/opt/mesflow/runtime/tutorials/esp-kiosk": {
+      "present": false,
+      "mode": null
+    },
+    "/opt/mesflow/runtime/backups": {
+      "present": true,
+      "mode": "755"
+    }
+  },
+  "disk_available_bytes": 33875357696
+}

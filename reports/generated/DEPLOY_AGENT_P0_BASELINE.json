@@ -1,0 +1,37 @@
+{
+  "project": "MESFlow Deploy Agent",
+  "version": "2.23.2-docker-runtime",
+  "source_zip": {
+    "filename": "mesflow-deploy-agent-source-2.23.2-docker-runtime.zip",
+    "file_count": 99,
+    "size_bytes": 226882,
+    "sha256": "085bed801b4e7f95bcc7f25cd122c8c2649ac34e6e470e7d7e7f7036958d7c15",
+    "status": "PASS",
+    "secret_gate": "PASS",
+    "clean_extract_tests": {"passed": 141, "failed": 0}
+  },
+  "tests": {
+    "command": "./scripts/test-baseline.sh",
+    "status": "PASS",
+    "passed": 168,
+    "failed": 0,
+    "skipped": 0
+  },
+  "build": {
+    "status": "PASS",
+    "validation_image": "mesflow-deploy-agent:p0-validation-2.23.2",
+    "image_id": "sha256:53e738b563e09db9082e17c240ae80ff7bdf6042ee626106a7bd03d405db3edd"
+  },
+  "migration": {
+    "status": "NOT_APPLICABLE",
+    "reason": "Deploy Agent has no Alembic schema or application database migration chain"
+  },
+  "version_sync": {"status": "PASS"},
+  "backend_extraction": {
+    "status": "DONE",
+    "module": "agent_backend/system_health.py",
+    "agent_lines_before": 4773,
+    "agent_lines_after": 4728
+  },
+  "production_mutation": false
+}

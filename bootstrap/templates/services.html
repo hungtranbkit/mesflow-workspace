@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Services — MESFlow Bootstrap{% endblock %}
+{% block content %}
+<h1>Services</h1>
+
+<div class="card">
+  <h2>SSH</h2>
+  <dl>
+    <dt>Installed</dt><dd><span class="badge {{ 'ok' if snap.ssh.installed else 'bad' }}">{{ 'yes' if snap.ssh.installed else 'no' }}</span></dd>
+    <dt>Unit</dt><dd>{{ snap.ssh.unit or 'unknown' }}</dd>
+    <dt>State</dt><dd><span class="badge {{ 'ok' if snap.ssh.active else 'warn' }}">{{ snap.ssh.state }}</span></dd>
+    <dt>Port</dt><dd>{{ snap.ssh.port }}</dd>
+    <dt>Server IP</dt><dd>{{ snap.ip }}</dd>
+  </dl>
+  {% if snap.ssh.installed and not snap.ssh.active %}
+  <form method="post" action="{{ url_for('services_action') }}" class="inline-form" onsubmit="return confirm('Start ' + this.unit.value + '?')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="confirm" value="yes">
+    <input type="hidden" name="unit" value="{{ snap.ssh.unit }}">
+    <input type="hidden" name="action" value="start">
+    <button type="submit" class="btn-secondary">Start SSH</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Deploy Agent</h2>
+  <dl>
+    <dt>Runtime</dt><dd>{{ snap.deploy_agent.runtime.method }}</dd>
+    <dt>Running</dt><dd><span class="badge {{ 'ok' if snap.deploy_agent.runtime.running else 'bad' }}">{{ 'yes' if snap.deploy_agent.runtime.running else 'no' }}</span></dd>
+    <dt>Health</dt><dd><span class="badge {{ 'ok' if snap.deploy_agent.health.healthy else 'bad' }}">{{ 'healthy' if snap.deploy_agent.health.healthy else 'not healthy' }}</span></dd>
+  </dl>
+  {% if snap.deploy_agent.runtime.method == 'docker' %}
+  <p class="muted small">Managed from the <a href="{{ url_for('docker_page') }}">Docker</a> page.</p>
+  {% elif snap.deploy_agent.runtime.method == 'systemd' and not snap.deploy_agent.runtime.running %}
+  <form method="post" action="{{ url_for('services_action') }}" class="inline-form" onsubmit="return confirm('Start mesflow-deploy-agent.service?')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="confirm" value="yes">
+    <input type="hidden" name="unit" value="mesflow-deploy-agent.service">
+    <input type="hidden" name="action" value="start">
+    <button type="submit" class="btn-secondary">Start Deploy Agent</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

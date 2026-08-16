@@ -1,0 +1,13 @@
+Đọc AGENTS.md.
+
+Chuẩn bị release nhưng KHÔNG production deploy.
+
+Yêu cầu:
+- xác định project release
+- tăng version nếu code thay đổi
+- đồng bộ version declarations
+- chạy focused tests
+- kiểm tra migration chain nếu có
+- package đúng contract của project
+- tạo report
+- production_action_required=true nếu bước tiếp theo là production deploy

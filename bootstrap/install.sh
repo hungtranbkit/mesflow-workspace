@@ -91,6 +91,10 @@ install -d -m 0755 /var/lib/mesflow-deploy-agent 2>/dev/null || true
 
 # --- 6. install Bootstrap service (code) --------------------------------------
 cp -a "$SRC/app.py" "$BOOTSTRAP_HOME/app.py"
+cp -a "$SRC/guide_content.py" "$BOOTSTRAP_HOME/guide_content.py"
+rm -rf "$BOOTSTRAP_HOME/bin"
+cp -a "$SRC/bin" "$BOOTSTRAP_HOME/bin"
+chmod +x "$BOOTSTRAP_HOME/bin/reset-admin-password" "$BOOTSTRAP_HOME/bin/reset_admin_password.py"
 rm -rf "$BOOTSTRAP_HOME/templates" "$BOOTSTRAP_HOME/static"
 cp -a "$SRC/templates" "$BOOTSTRAP_HOME/templates"
 cp -a "$SRC/static" "$BOOTSTRAP_HOME/static"
@@ -202,6 +206,9 @@ if [[ -f "$DATA_DIR/SETUP_TOKEN.txt" ]]; then
   echo "First-run setup token (root-only file, use once at /setup):"
   echo "  sudo cat $DATA_DIR/SETUP_TOKEN.txt"
 fi
+echo
+echo "Forgot the Bootstrap admin password later? Run locally on this server:"
+echo "  sudo $BOOTSTRAP_HOME/bin/reset-admin-password"
 if [[ -f "$BOOTSTRAP_HOME/agent_updater_core.py" ]]; then
   echo
   echo "Update/Rollback:  enabled (GET/POST http://${IP_ADDR}:${PORT}/updater/{health,status,update})"

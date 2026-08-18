@@ -1,0 +1,354 @@
+[
+  {
+    "page": "business-audit",
+    "label": "Business Audit",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 21147
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 213.875,
+        "width": 1624,
+        "height": 127.03125
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-business-audit-1920x1080.png"
+  },
+  {
+    "page": "system-logs",
+    "label": "System Logs",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 28908.296875
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 222,
+        "width": 1624,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-system-logs-1920x1080.png"
+  },
+  {
+    "page": "qr-print",
+    "label": "QR Print",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 2025.734375
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 150,
+        "width": 1624,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-qr-print-1920x1080.png"
+  },
+  {
+    "page": "production-schedule",
+    "label": "Production Schedule",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 12099.8125
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 289,
+        "right": 1879,
+        "top": 183,
+        "width": 1590,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-production-schedule-1920x1080.png"
+  },
+  {
+    "page": "business-audit",
+    "label": "Business Audit",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 21280.734375
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 209.875,
+        "width": 1098,
+        "height": 127.03125
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-business-audit-1366x768.png"
+  },
+  {
+    "page": "system-logs",
+    "label": "System Logs",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 28908.296875
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 218,
+        "width": 1098,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-system-logs-1366x768.png"
+  },
+  {
+    "page": "qr-print",
+    "label": "QR Print",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 3173.734375
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 146,
+        "width": 1098,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-qr-print-1366x768.png"
+  },
+  {
+    "page": "production-schedule",
+    "label": "Production Schedule",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 12526.765625
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 263,
+        "right": 1331,
+        "top": 177,
+        "width": 1068,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchC1-preview-verify/preview-production-schedule-1366x768.png"
+  }
+]

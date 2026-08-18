@@ -37,6 +37,12 @@ even when Docker, MESFlow or the Deploy Agent are down.
   two different package formats for two different situations — do not merge
   them into one upload form.
 - Never delete or wipe `/var/lib/mesflow-deploy-agent`.
+- Admin password reset (`bin/reset-admin-password`) is local-shell-only by
+  design (root/sudo on the server itself) — never add a web route for it.
+  An operator locked out of Bootstrap cannot use a route on the service
+  they are locked out of; the script requires the same access `install.sh`
+  already requires, nothing more. Never document or add manual
+  `state.json` `admin_password_hash` editing as a substitute.
 - No arbitrary command execution / web shell. Only the fixed allowlist in
   `app.py`'s `SAFE_COMMANDS`.
 - **Migration gate — do not remove `deploy-agent/updater/` (:8099) or its

@@ -25,6 +25,10 @@ initial admin setup at `/setup`.
 ```
 /opt/mesflow-bootstrap/        # source + venv (from this bootstrap/ dir)
   app.py
+  guide_content.py
+  bin/
+    reset-admin-password       # local-only admin password reset (see below)
+    reset_admin_password.py
   templates/
   static/
   .venv/
@@ -40,7 +44,12 @@ initial admin setup at `/setup`.
 
 ## Pages
 
-Overview · Install Deploy Agent · Docker · Services · Logs · Commands.
+Overview · Install Deploy Agent · Docker · Services · Logs · Commands ·
+Deployment Guide (`/guide/deployment`) — a beginner-friendly, step-by-step
+runbook covering server prep through post-deploy verification and
+recovery; source of truth is `guide_content.py`, also rendered to
+`docs/MESFLOW_SERVER_DEPLOYMENT_GUIDE.md` by
+`scripts/generate_guide_doc.py`.
 
 When the Deploy Agent is healthy, Overview leads with a "Deploy Agent
 Healthy → Open Deploy Agent" panel — Bootstrap becomes a minimal recovery
@@ -95,6 +104,26 @@ during migration; only removed after the gate in
 `uptime`, `free -h`, `df -h`, `ip addr`, `ss -ltnp`, `systemctl --failed`,
 `docker ps`, `docker ps -a`, `docker images`, `docker compose ls`. Every run
 is timeout-bounded, output-bounded, and written to the audit log.
+
+## Forgot the admin password?
+
+There is no web-based password reset (an operator locked out of Bootstrap
+can't use a route on the service they're locked out of). On the server
+itself, with root/sudo:
+
+```bash
+sudo /opt/mesflow-bootstrap/bin/reset-admin-password
+```
+
+Prompts for (and never echoes/prints/logs) a new password, rewrites only
+`admin_username`/`admin_password_hash` in `state.json`, and appends one line
+to `logs/audit.log`. Every other field in `state.json` (`secret_key`,
+`agent_updater_token`, `setup_complete`, ...) is left untouched. No restart
+is needed — `/login` reads `state.json` fresh on every request. Never edit
+`state.json`'s `admin_password_hash` by hand; use this script so the hash
+format and audit trail stay correct. See the guide's "Khôi phục truy cập /
+Quên mật khẩu" section for the full beginner walkthrough and the equivalent
+recovery flow for Deploy Agent and MESFlow.
 
 ## Docker/service actions
 

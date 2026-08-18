@@ -1,0 +1,13 @@
+{
+  "screen": "clock",
+  "width": 320,
+  "height": 240,
+  "rotation": 3,
+  "time": "15:11",
+  "date": "17/08/2026",
+  "weather": "",
+  "temperature": 0,
+  "wifi_rssi": -36,
+  "wifi_connected": true,
+  "qa_mode": false
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "name": "ba-category-chips-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-category-switch",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-filter-applies",
+    "ok": true,
+    "detail": "0 bản ghi phù hợp"
+  },
+  {
+    "name": "ba-detail-opens",
+    "ok": false,
+    "detail": "no rows to open"
+  },
+  {
+    "name": "sl-outcome-filter-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sl-refresh-click",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sl-tab-switch-errors",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sl-tab-switch-retention",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sl-actions-table-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "qr-catalog-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "qr-selection-updates-summary",
+    "ok": true,
+    "detail": "Hiển thị 52 QR · Đã chọn 1 tem"
+  },
+  {
+    "name": "qr-print-wiring",
+    "ok": true,
+    "detail": "{\"called\":true,\"sheetHasContent\":true,\"ariaHidden\":\"false\"}"
+  },
+  {
+    "name": "ps-po-filter-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-po-filter-change",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-reload-click",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-sticky-toolbar-pinned",
+    "ok": true,
+    "detail": "top=72"
+  }
+]

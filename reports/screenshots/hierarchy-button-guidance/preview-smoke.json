@@ -1,0 +1,112 @@
+[
+  {
+    "name": "guide-mesflow-tab-active-default",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-esp-tab-switch",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-mesflow-tab-switch-back",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-survives-refresh",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-tools-menu-opens",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-tools-open",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-list-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-category-chips",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-filter-works",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-mini-buttons-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-gantt-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-material-flow-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-reload-works",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-sticky-toolbar-pinned",
+    "ok": true,
+    "detail": "top=72"
+  },
+  {
+    "name": "sl-errors-tab",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sl-retention-tab",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sl-refresh-works",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "qr-catalog-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "qr-selection-works",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "qr-print-wiring-non-destructive",
+    "ok": true,
+    "detail": "{\"called\":true,\"sheet\":true}"
+  },
+  {
+    "name": "users-list-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "users-search-works",
+    "ok": true,
+    "detail": ""
+  }
+]

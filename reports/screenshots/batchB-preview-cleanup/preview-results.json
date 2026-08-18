@@ -1,0 +1,410 @@
+[
+  {
+    "page": "overview",
+    "label": "Overview",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 7523.015625
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "panel": {
+        "left": 272,
+        "right": 1896,
+        "top": 366.625,
+        "width": 1624,
+        "height": 284.65625
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 150,
+        "width": 1624,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-overview-1920x1080.png"
+  },
+  {
+    "page": "dashboard",
+    "label": "Dashboard",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 9138.984375
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "panel": {
+        "left": 272,
+        "right": 1896,
+        "top": 392.3125,
+        "width": 1624,
+        "height": 3847.46875
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 150,
+        "width": 1624,
+        "height": 106.296875
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-dashboard-1920x1080.png"
+  },
+  {
+    "page": "production-trace",
+    "label": "Production Trace",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 519.171875
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "panel": {
+        "left": 272,
+        "right": 1896,
+        "top": 495.171875,
+        "width": 1624,
+        "height": 112
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 150,
+        "width": 1624,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-production-trace-1920x1080.png"
+  },
+  {
+    "page": "kiosk-management",
+    "label": "Kiosk Management",
+    "viewport": "1920x1080",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 2056.25
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "panel": {
+        "left": 272,
+        "right": 1896,
+        "top": 433.15625,
+        "width": 1624,
+        "height": 1549.09375
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 334,
+        "width": 1624,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-kiosk-management-1920x1080.png"
+  },
+  {
+    "page": "overview",
+    "label": "Overview",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 7635.765625
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "panel": {
+        "left": 248,
+        "right": 1346,
+        "top": 479.375,
+        "width": 1098,
+        "height": 280.65625
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 146,
+        "width": 1098,
+        "height": 148.3125
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-overview-1366x768.png"
+  },
+  {
+    "page": "dashboard",
+    "label": "Dashboard",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 9392.640625
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "panel": {
+        "left": 248,
+        "right": 1346,
+        "top": 388.3125,
+        "width": 1098,
+        "height": 3847.46875
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 146,
+        "width": 1098,
+        "height": 106.296875
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-dashboard-1366x768.png"
+  },
+  {
+    "page": "production-trace",
+    "label": "Production Trace",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 519.171875
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "panel": {
+        "left": 248,
+        "right": 1346,
+        "top": 491.171875,
+        "width": 1098,
+        "height": 112
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 146,
+        "width": 1098,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-production-trace-1366x768.png"
+  },
+  {
+    "page": "kiosk-management",
+    "label": "Kiosk Management",
+    "viewport": "1366x768",
+    "loginOk": true,
+    "overflowPx": 0,
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 3040.375
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "panel": {
+        "left": 248,
+        "right": 1346,
+        "top": 429.15625,
+        "width": 1098,
+        "height": 2537.21875
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 330,
+        "width": 1098,
+        "height": 83.15625
+      },
+      "controlHeight": 36
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "evalError": null,
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/batchB-preview-cleanup/preview-kiosk-management-1366x768.png"
+  }
+]

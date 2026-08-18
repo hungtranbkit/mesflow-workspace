@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}Hướng dẫn triển khai — MESFlow Bootstrap{% endblock %}
+{% block bodyclass %}guide-page{% endblock %}
+
+{% macro render_cmd(cmd) %}
+<div class="cmd-block">
+  <div class="cmd-head">
+    <span class="machine-badge {{ cmd.machine }}">{{ cmd.machine_label }}</span>
+    <button type="button" class="copy-btn" data-copy-btn>Copy</button>
+  </div>
+  <pre>{{ cmd.code }}</pre>
+  {% if cmd.note %}<p class="cmd-note">{{ cmd.note | safe }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<h1>Hướng dẫn triển khai MESFlow</h1>
+<p class="guide-lede">Runbook đầy đủ để một người CHƯA biết MESFlow, Docker, Bootstrap hay Deploy Agent vẫn có thể
+  tự chuẩn bị và triển khai một server mới, từng bước một. Trang này và
+  <code>bootstrap/docs/MESFLOW_SERVER_DEPLOYMENT_GUIDE.md</code> dùng chung một nguồn dữ liệu
+  (<code>bootstrap/guide_content.py</code>) — sửa nội dung ở đó, không sửa tay hai bản riêng.</p>
+
+<div class="guide-layout">
+  <aside class="guide-toc" aria-label="Mục lục">
+    <h3>Bắt đầu</h3>
+    <ol>
+      <li><a href="#kien-truc">Kiến trúc triển khai</a></li>
+      <li><a href="#vai-tro">Vai trò server (SERVER_ROLE)</a></li>
+    </ol>
+    <h3>12 bước triển khai</h3>
+    <ol>
+      {% for s in steps %}<li><a href="#{{ s.id }}">{{ s.num }}. {{ s.title }}</a></li>{% endfor %}
+    </ol>
+    <h3>Khi có sự cố</h3>
+    <ol>
+      <li><a href="#su-co">Sự cố thường gặp</a></li>
+      <li><a href="#quen-mat-khau">Quên mật khẩu / Mất quyền truy cập</a></li>
+      <li><a href="#cay-quyet-dinh">Cây quyết định phục hồi</a></li>
+      <li><a href="#checklist">Checklist trạng thái</a></li>
+      <li><a href="#thuat-ngu">Thuật ngữ</a></li>
+    </ol>
+  </aside>
+
+  <div class="guide-main">
+
+    <section id="kien-truc" class="guide-section">
+      <h2>Kiến trúc triển khai</h2>
+      <div class="diagram-box"><pre>{{ architecture_diagram }}</pre></div>
+      <div class="term-grid">
+        {% for item in architecture_explain %}
+        <div class="term-card"><b>{{ item.term }}</b><p>{{ item.text }}</p></div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section id="vai-tro" class="guide-section">
+      <h2>Vai trò server (SERVER_ROLE) — làm sao biết đây là máy gì?</h2>
+      <p>{{ server_role.intro | safe }}</p>
+      <p>Giá trị hợp lệ:
+        {% for v in server_role.canonical_values %}<code>{{ v }}</code>{{ ", " if not loop.last else "" }}{% endfor %}
+      </p>
+      <p>{{ server_role.how_set | safe }}</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Máy</th><th>Compose override</th><th>Đặt gì</th></tr></thead>
+          <tbody>
+            {% for row in server_role.compose_table %}
+            <tr><td>{{ row.host }}</td><td><code>{{ row.file }}</code></td><td>{{ row.sets }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p>{{ server_role.install_default | safe }}</p>
+
+      <h3 class="step-block-heading">Cách kiểm tra vai trò thật của một máy</h3>
+      {% for cmd in server_role.verify_commands %}{{ render_cmd(cmd) }}{% endfor %}
+
+      <div class="role-warning">⚠ {{ server_role.warning | safe }}</div>
+
+      <details class="advanced">
+        <summary class="muted small">Nếu vai trò sai — cách sửa (bấm để mở)</summary>
+        {% for cmd in server_role.fix_commands %}{{ render_cmd(cmd) }}{% endfor %}
+      </details>
+    </section>
+
+    <section class="guide-section">
+      <h2>Hành trình triển khai — 12 bước</h2>
+      {% for s in steps %}
+      <article id="{{ s.id }}" class="step-card">
+        <div class="step-head">
+          <span class="step-num">{{ s.num }}</span>
+          <h3 class="step-title">{{ s.title }}</h3>
+        </div>
+        <dl class="step-meta">
+          <dt>MỤC ĐÍCH</dt><dd>{{ s.purpose }}</dd>
+          <dt>THỰC HIỆN Ở ĐÂU</dt><dd>{{ s.where }}</dd>
+        </dl>
+
+        {% for b in s.blocks %}
+        <div class="step-block">
+          {% if b.heading %}<p class="step-block-heading">{{ b.heading }}</p>{% endif %}
+          {% if b.text %}<p class="step-block-text">{{ b.text | safe }}</p>{% endif %}
+          {% for cmd in b.commands %}{{ render_cmd(cmd) }}{% endfor %}
+          {% if b.note %}<p class="step-block-note">{{ b.note | safe }}</p>{% endif %}
+        </div>
+        {% endfor %}
+
+        <dl class="step-foot">
+          <div class="lbl-expected"><dt>KẾT QUẢ MONG ĐỢI</dt><dd>{{ s.expected | safe }}</dd></div>
+          <div class="lbl-error"><dt>NẾU LỖI THÌ LÀM GÌ</dt><dd>{{ s.on_error | safe }}</dd></div>
+          <div><dt>TIẾP THEO</dt><dd>{{ s.next }}</dd></div>
+        </dl>
+      </article>
+      {% endfor %}
+    </section>
+
+    <section id="su-co" class="guide-section">
+      <h2>Sự cố thường gặp</h2>
+      {% for f in failures %}
+      <div class="failure-card">
+        <h3>{{ f.title }}</h3>
+        <p class="lbl">Triệu chứng</p>
+        <pre class="symptom">{{ f.symptom }}</pre>
+        {% if f.diagnose %}
+        <p class="lbl">Chẩn đoán</p>
+        {% for cmd in f.diagnose %}{{ render_cmd(cmd) }}{% endfor %}
+        {% endif %}
+        <p class="lbl">Xử lý</p>
+        <p class="fix-text">{{ f.fix | safe }}</p>
+        {% for cmd in f.get('extra_commands', []) %}{{ render_cmd(cmd) }}{% endfor %}
+      </div>
+      {% endfor %}
+    </section>
+
+    <section id="quen-mat-khau" class="guide-section">
+      <h2>Quên mật khẩu / Mất quyền truy cập</h2>
+      <p class="muted small">Ba hệ thống, ba cơ chế khôi phục khác nhau — không có một mật khẩu "vạn năng" nào dùng
+        chung cho cả ba, và không có đường web nào tự reset chính nó (nếu vào được web thì đã không cần khôi phục).
+        Mỗi thẻ dưới đây là một hệ thống, theo đúng thứ tự: cần quyền gì → lệnh/URL chính xác → kết quả mong đợi →
+        điều không được làm → cách xác nhận đã khôi phục thành công.</p>
+
+      <div class="access-card-grid">
+        {% for a in recovery_access %}
+        <div class="access-card">
+          <h3>{{ a.system }}</h3>
+          <p class="access-lbl">Nếu quên</p>
+          <p class="access-text">{{ a.if_forgotten | safe }}</p>
+          <p class="access-lbl">Cần quyền gì</p>
+          <p class="access-text">{{ a.access_required | safe }}</p>
+          <p class="access-lbl">Lệnh / URL chính xác</p>
+          {% for cmd in a.commands %}{{ render_cmd(cmd) }}{% endfor %}
+          <p class="access-lbl">Kết quả mong đợi</p>
+          <p class="access-text">{{ a.expected | safe }}</p>
+          <p class="access-lbl access-lbl-warn">Không được làm</p>
+          <p class="access-text access-warn-text">{{ a.do_not | safe }}</p>
+          <p class="access-lbl">Cách xác nhận đã khôi phục</p>
+          {% for cmd in a.verify %}{{ render_cmd(cmd) }}{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="note-box">{{ recovery_access_env_warning | safe }}</div>
+      <p class="step-block-text">{{ recovery_access_cli_fallback | safe }}</p>
+      <div class="note-box">{{ mesflow_admin_password_warning | safe }}</div>
+
+      <h3 class="step-block-heading">Ma trận truy cập khẩn cấp</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Quên gì</th><th>Cần gì</th><th>Cách khôi phục</th></tr></thead>
+          <tbody>
+            {% for row in emergency_access_matrix %}
+            <tr><td>{{ row.forgot }}</td><td>{{ row.need }}</td><td>{{ row.recovery | safe }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="role-warning">⚠ {{ lost_ssh_note }}</div>
+
+      <h3 class="step-block-heading">Cảnh báo bảo mật</h3>
+      <ul class="checklist">
+        {% for warn in recovery_security_warnings %}
+        <li>⚠ {{ warn | safe }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section id="cay-quyet-dinh" class="guide-section">
+      <h2>Cây quyết định phục hồi</h2>
+      <p class="muted small">Đi từ trên xuống. Ở mỗi câu hỏi: nếu <b>KHÔNG</b>, làm theo hành động ghi bên dưới và
+        dừng lại ở đó; nếu <b>CÓ</b>, chuyển sang câu hỏi kế tiếp.</p>
+      <ol class="tree-list">
+        {% for node in recovery_tree %}
+        <li class="tree-node">
+          <p class="q">{{ node.q }}</p>
+          <p class="no-branch"><b>Không →</b> {{ node.no }}</p>
+          {% if node.yes_next %}<p class="yes-branch">Có → chuyển sang câu hỏi kế tiếp</p>{% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    <section id="checklist" class="guide-section">
+      <h2>Checklist trạng thái</h2>
+      <div class="checklist-grid">
+        <div class="card">
+          <h3>Chung</h3>
+          <ul class="checklist">
+            {% for item in checklist_general %}
+            <li><input type="checkbox" id="chk-g-{{ loop.index }}"><label for="chk-g-{{ loop.index }}">{{ item }}</label></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="card checklist-production">
+          <h3>Riêng cho Production</h3>
+          <ul class="checklist">
+            {% for item in checklist_production %}
+            <li><input type="checkbox" id="chk-p-{{ loop.index }}"><label for="chk-p-{{ loop.index }}">{{ item }}</label></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="thuat-ngu" class="guide-section">
+      <h2>Thuật ngữ</h2>
+      <dl class="glossary-grid">
+        {% for term, definition in glossary %}
+        <dt>{{ term }}</dt><dd>{{ definition }}</dd>
+        {% endfor %}
+      </dl>
+    </section>
+
+    <p class="muted small">Phiên bản nội dung hướng dẫn: {{ guide_version }}. Toàn bộ lệnh trong trang này được đọc
+      trực tiếp từ code hiện tại của <code>bootstrap/</code> và <code>deploy-agent/</code> — nếu code thay đổi, sửa
+      lại <code>bootstrap/guide_content.py</code> rồi chạy <code>bootstrap/scripts/generate_guide_doc.py</code>.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('[data-copy-btn]');
+    if (!btn) return;
+    var block = btn.closest('.cmd-block');
+    var pre = block && block.querySelector('pre');
+    if (!pre) return;
+    var text = pre.innerText;
+    var done = function () {
+      var prev = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(function () { btn.textContent = prev; btn.classList.remove('copied'); }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  });
+  function fallbackCopy(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+    done();
+  }
+})();
+</script>
+{% endblock %}

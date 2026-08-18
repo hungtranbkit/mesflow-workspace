@@ -1,0 +1,62 @@
+[
+  {
+    "name": "overview-reload-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "overview-reload-click",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "dashboard-refresh-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "dashboard-refresh-click",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "dashboard-shift-filter-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "production-trace-tabs-present",
+    "ok": true,
+    "detail": "count=8"
+  },
+  {
+    "name": "production-trace-tab-switch",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "production-trace-po-filter-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "kiosk-search-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "kiosk-search-type",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "kiosk-row-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "kiosk-detail-opens",
+    "ok": true,
+    "detail": ""
+  }
+]

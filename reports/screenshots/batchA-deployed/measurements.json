@@ -1,0 +1,198 @@
+{
+  "1920x1080": {
+    "production-orders": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "height": 274
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "employees": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "height": 800
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "equipment": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "height": 185
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "users": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "height": 181
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "working-calendar": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "height": 46
+      },
+      "filterBar": null,
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "height": 213
+      },
+      "inputH": null,
+      "selectH": null,
+      "overflow": 0
+    }
+  },
+  "1366x768": {
+    "production-orders": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "height": 274
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "employees": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "height": 591
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "equipment": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "height": 185
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "users": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "height": 181
+      },
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "working-calendar": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "height": 46
+      },
+      "filterBar": null,
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "height": 213
+      },
+      "inputH": null,
+      "selectH": null,
+      "overflow": 0
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "",
+  "fqbn": "esp32:esp32:esp32",
+  "hardwareFolders": "/home/dell/.arduino15/packages/esp32/hardware/esp32/3.3.11,/home/dell/.arduino15/packages/esp32/hardware/esp32/3.3.11",
+  "otherLibrariesFolders": "/home/dell/Arduino/libraries",
+  "sketchLocation": "/home/dell/workspace/mesflow/esp32-cyd-clock/display_test/test_a_ili9341"
+}

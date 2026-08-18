@@ -1,0 +1,12 @@
+{
+  "screen": "clock",
+  "width": 320,
+  "height": 240,
+  "rotation": 1,
+  "time": "17:17",
+  "date": "17/08/2026",
+  "weather": "Mua phun",
+  "temperature": 23,
+  "wifi_rssi": -35,
+  "wifi_connected": true
+}

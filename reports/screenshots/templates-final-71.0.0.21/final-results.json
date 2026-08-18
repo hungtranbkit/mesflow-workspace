@@ -1,0 +1,120 @@
+[
+  {
+    "viewport": "1920x1080",
+    "rects": {
+      "shell": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 7518
+      },
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "top": 88,
+        "width": 1624,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "top": 150,
+        "width": 1624,
+        "height": 83.15625
+      },
+      "listPanel": {
+        "left": 272,
+        "right": 602,
+        "top": 249.15625,
+        "width": 330,
+        "height": 599.5
+      },
+      "editor": {
+        "left": 616,
+        "right": 1896,
+        "top": 249.15625,
+        "width": 1280,
+        "height": 7356.84375
+      },
+      "controlHeight": 36,
+      "formInputHeight": 36,
+      "partInputHeight": 36,
+      "opInputHeight": 36.015625
+    },
+    "goldenShell": {
+      "left": 272,
+      "right": 1896,
+      "top": 88,
+      "width": 1624,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "overflowPx": 0,
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "failedRequests": [
+      "FAILED http://127.0.0.1:8080/api/templates/1"
+    ],
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/templates-final-71.0.0.21/final-templates-1920x1080.png"
+  },
+  {
+    "viewport": "1366x768",
+    "rects": {
+      "shell": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 7514
+      },
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "top": 84,
+        "width": 1098,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "top": 146,
+        "width": 1098,
+        "height": 83.15625
+      },
+      "listPanel": {
+        "left": 248,
+        "right": 578,
+        "top": 245.15625,
+        "width": 330,
+        "height": 599.5
+      },
+      "editor": {
+        "left": 592,
+        "right": 1346,
+        "top": 245.15625,
+        "width": 754,
+        "height": 7352.84375
+      },
+      "controlHeight": 36,
+      "formInputHeight": 36,
+      "partInputHeight": 36,
+      "opInputHeight": 36.015625
+    },
+    "goldenShell": {
+      "left": 248,
+      "right": 1346,
+      "top": 84,
+      "width": 1098,
+      "height": 478.03125
+    },
+    "edgeDiffLeft": 0,
+    "edgeDiffRight": 0,
+    "overflowPx": 0,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "screenshot": "/home/dell/workspace/mesflow/reports/screenshots/templates-final-71.0.0.21/final-templates-1366x768.png"
+  }
+]

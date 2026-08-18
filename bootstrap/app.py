@@ -50,7 +50,14 @@ from waitress import serve
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-BOOTSTRAP_VERSION = "1.1.0"  # 1.1.0: Deploy Agent update/rollback consolidated from deploy-agent/updater/ (:8099)
+import guide_content
+
+BOOTSTRAP_VERSION = "1.3.1"  # 1.3.1: corrects the guide's MESFlow admin-recovery command (reset-admin via
+# docker exec, not the unreleased reset-password) -- content-only fix, no route/behavior change
+# 1.3.0: adds bin/reset-admin-password (local-only admin password reset) and the
+# guide's "Khôi phục truy cập / Quên mật khẩu" section
+# 1.2.0: adds the beginner deployment guide (/guide/deployment)
+# 1.1.0: Deploy Agent update/rollback consolidated from deploy-agent/updater/ (:8099)
 
 # --------------------------------------------------------------------------
 # Configuration (env-overridable; see install.sh / mesflow-bootstrap.env)
@@ -1138,6 +1145,37 @@ def commands_page():
             selected = request.form.get("key", "")
             result = run_safe_command(selected)
     return render_template("commands.html", commands=SAFE_COMMANDS.keys(), result=result, selected=selected)
+
+
+@app.get("/guide/deployment")
+@login_required
+def guide_deployment():
+    """Beginner-friendly deployment guide. Pure documentation -- reads no
+    live state and performs no action, so it's safe to load even when
+    Docker/Deploy Agent/MESFlow are all down. Content lives in
+    guide_content.py (single source of truth shared with
+    docs/MESFLOW_SERVER_DEPLOYMENT_GUIDE.md -- see
+    scripts/generate_guide_doc.py)."""
+    return render_template(
+        "guide_deployment.html",
+        guide_version=guide_content.GUIDE_VERSION,
+        architecture_diagram=guide_content.ARCHITECTURE_DIAGRAM,
+        architecture_explain=guide_content.ARCHITECTURE_EXPLAIN,
+        server_role=guide_content.SERVER_ROLE,
+        steps=guide_content.STEPS,
+        failures=guide_content.FAILURES,
+        recovery_access=guide_content.RECOVERY_ACCESS,
+        recovery_access_env_warning=guide_content.RECOVERY_ACCESS_ENV_WARNING,
+        mesflow_admin_password_warning=guide_content.MESFLOW_ADMIN_PASSWORD_WARNING,
+        recovery_access_cli_fallback=guide_content.RECOVERY_ACCESS_CLI_FALLBACK,
+        emergency_access_matrix=guide_content.EMERGENCY_ACCESS_MATRIX,
+        lost_ssh_note=guide_content.LOST_SSH_NOTE,
+        recovery_security_warnings=guide_content.RECOVERY_SECURITY_WARNINGS,
+        recovery_tree=guide_content.RECOVERY_TREE,
+        checklist_general=guide_content.CHECKLIST_GENERAL,
+        checklist_production=guide_content.CHECKLIST_PRODUCTION,
+        glossary=guide_content.GLOSSARY,
+    )
 
 
 def main():

@@ -1,0 +1,57 @@
+[
+  {
+    "name": "tpl-list-loads",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-search-filters",
+    "ok": true,
+    "detail": "count=1"
+  },
+  {
+    "name": "tpl-open-template",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-editor-loads",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-parts-section-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-operations-section-present",
+    "ok": true,
+    "detail": "rows=21"
+  },
+  {
+    "name": "tpl-back-to-list-selection",
+    "ok": true,
+    "detail": "DEMO-E10-CHI-TIET"
+  },
+  {
+    "name": "tpl-create-ui-opens",
+    "ok": true,
+    "detail": "TPL-"
+  },
+  {
+    "name": "tpl-tools-menu-opens",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-save-wiring",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tpl-delete-confirmation-opens-non-destructive",
+    "ok": true,
+    "detail": ""
+  }
+]

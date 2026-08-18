@@ -1,0 +1,168 @@
+{
+  "1920x1080": {
+    "production-orders": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 88,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 193,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 292,
+        "height": 274
+      },
+      "btnH": 36,
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "session-management": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 88,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 150,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 265,
+        "height": 205
+      },
+      "btnH": 36,
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "session-exceptions": {
+      "header": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 88,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 328,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 272,
+        "right": 1896,
+        "width": 1624,
+        "top": 427,
+        "height": 4204
+      },
+      "btnH": 36,
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    }
+  },
+  "1366x768": {
+    "production-orders": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 84,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 189,
+        "height": 83
+      },
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 288,
+        "height": 274
+      },
+      "btnH": 36,
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "session-management": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 84,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 146,
+        "height": 127
+      },
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 305,
+        "height": 205
+      },
+      "btnH": 36,
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    },
+    "session-exceptions": {
+      "header": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 84,
+        "height": 46
+      },
+      "filterBar": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 324,
+        "height": 148
+      },
+      "contentPanel": {
+        "left": 248,
+        "right": 1346,
+        "width": 1098,
+        "top": 488,
+        "height": 4228
+      },
+      "btnH": 36,
+      "inputH": 36,
+      "selectH": 36,
+      "overflow": 0
+    }
+  }
+}

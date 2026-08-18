@@ -1,0 +1,202 @@
+[
+  {
+    "name": "po-stats-actions-one-row",
+    "ok": "ref: <Node>",
+    "detail": ""
+  },
+  {
+    "name": "po-create-wiring",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "po-import-export",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "po-search-works",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "po-open-navigates",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ec-tabs-canonical",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ec-tab-switch",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ec-filter-apply",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ec-view-exception",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "trace-empty-state-compact",
+    "ok": "ref: <Node>",
+    "detail": ""
+  },
+  {
+    "name": "trace-tabs-hidden-when-empty",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "trace-panel-hidden-when-empty",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "trace-po-selection-loads",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "trace-tabs-canonical",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "trace-tab-switch",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "trace-refresh",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "trace-reverts-to-empty-state",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-categories-inside-filterbar",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-category-selection",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-filters-apply",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-advanced-filters-toggle",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ba-detail-opens",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-po-filter",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-refresh",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-gantt-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-material-flow-present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "ps-sticky-toolbar-pinned",
+    "ok": true,
+    "detail": "top=72"
+  },
+  {
+    "name": "km-kpi-actions-one-row",
+    "ok": "ref: <Node>",
+    "detail": ""
+  },
+  {
+    "name": "km-5-kpi-one-row-1920",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "km-refresh",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "km-search",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "km-status-filter",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "km-device-card-detail",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-tabs-canonical",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-mesflow-tab-default",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-search",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-group-filter",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-video-card-interaction",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-esp-tab",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guide-refresh-state",
+    "ok": true,
+    "detail": ""
+  }
+]

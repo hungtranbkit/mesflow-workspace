@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "compiler.cpp.extra_flags=-DUSER_SETUP_LOADED=1 -DST7789_DRIVER=1 -DTFT_WIDTH=240 -DTFT_HEIGHT=320 -DTFT_MISO=12 -DTFT_MOSI=13 -DTFT_SCLK=14 -DTFT_CS=15 -DTFT_DC=2 -DTFT_RST=-1 -DSPI_FREQUENCY=20000000 -DSPI_READ_FREQUENCY=20000000",
+  "fqbn": "esp32:esp32:esp32",
+  "hardwareFolders": "/home/dell/.arduino15/packages/esp32/hardware/esp32/3.3.11,/home/dell/.arduino15/packages/esp32/hardware/esp32/3.3.11",
+  "otherLibrariesFolders": "/home/dell/Arduino/libraries",
+  "sketchLocation": "/home/dell/workspace/mesflow/esp32-cyd-clock/display_test/final_pattern"
+}

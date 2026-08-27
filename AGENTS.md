@@ -7,6 +7,320 @@ which coding agent you are (Claude Code, Codex, Gemini, Aider, or other).
 It is the normative agent policy for the whole workspace, not just the
 MESFlow app.
 
+## Agent Worktree & Branch Isolation Standard — mandatory for every coding agent
+
+This section is normative for every agent working in this repository or
+workspace, including Claude Code, Codex, Gemini, Aider, and future agents.
+
+### 1. Core rule
+
+Every coding task must have:
+
+```text
+ONE AGENT
+→ ONE BRANCH
+→ ONE DEDICATED GIT WORKTREE
+```
+
+An agent must not perform non-trivial coding directly in the shared/main
+working tree. The canonical/main checkout is treated as a
+reference/control workspace.
+
+### 2. Branch naming
+
+Use:
+
+```text
+agent/<agent>/<task>
+```
+
+Examples: `agent/codex/session-filter`, `agent/claude/session-review`,
+`agent/codex/qa-dashboard`, `agent/claude/cicd-phase3`.
+
+Integration branches use:
+
+```text
+integration/<task>
+```
+
+Examples: `integration/session-upgrade`, `integration/release-v71`.
+
+Do not use the same branch for two simultaneously active agents.
+
+### 3. Worktree naming
+
+Agent worktrees must live outside the canonical source directory.
+Preferred layout:
+
+```text
+repo/
+.worktrees/
+  codex-<task>/
+  claude-<task>/
+  integration-<task>/
+```
+
+Example:
+
+```text
+/home/dell/workspace/mesflow/
+├── mesflow/
+└── .worktrees/
+    ├── codex-session-filter/
+    ├── claude-session-review/
+    └── integration-session-upgrade/
+```
+
+### 4. Creating an agent worktree
+
+Before creating the worktree:
+
+```bash
+git status
+git fetch --all --prune
+```
+
+Create:
+
+```bash
+git worktree add <worktree-path> -b agent/<agent>/<task> main
+```
+
+Example:
+
+```bash
+git worktree add ../.worktrees/codex-session-filter -b agent/codex/session-filter main
+```
+
+The agent must then perform all edits, tests, commits, and task-local
+commands from that worktree.
+
+### 5. Worktree ownership
+
+Once assigned, `agent/codex/task-A` belongs to Codex for the lifetime of
+that task. Another agent must not checkout that branch, modify its
+working tree, reset it, clean it, or rewrite its commits without explicit
+coordination. Likewise, the owner agent must not switch its worktree to
+another agent's branch.
+
+### 6. No branch switching as collaboration
+
+Agents must not collaborate by repeatedly doing `git checkout
+other-agent-branch` inside their existing worktree. Collaboration happens
+through Git commits and integration branches. Worktree identity should
+remain stable for the task.
+
+### 7. Committing work
+
+Agents should create focused commits, e.g. `fix(session): cascade PO Part
+Operation filters` or `feat(session): add operation correction flow`.
+Before reporting a task ready for integration, `git status` must be
+reviewed. Task changes should be committed unless the user explicitly
+requests otherwise. Unrelated WIP must never be included.
+
+### 8. Cross-agent integration
+
+When changes from multiple agents need to work together, create a
+separate integration branch and worktree:
+
+```bash
+git worktree add ../.worktrees/integration-session-upgrade -b integration/session-upgrade main
+cd ../.worktrees/integration-session-upgrade
+git merge agent/codex/session-filter
+git merge agent/claude/session-review
+```
+
+Run integration tests only after the required branches have been merged.
+
+### 9. Integration branch purpose
+
+An integration branch exists to combine completed agent branches, resolve
+cross-branch conflicts, run combined tests/build/migration checks/E2E/
+qualification. It is not the primary coding branch for individual feature
+ownership.
+
+### 10. Fix ownership
+
+If integration testing reveals a defect clearly belonging to one agent's
+task: FAIL → return the issue to the owning agent branch → agent fixes →
+commit → merge the updated branch into integration → rerun verification.
+Do not normally patch the defect only on the integration branch — this
+prevents `source branch != integrated implementation`.
+
+### 11. Integration-only fixes
+
+A fix may be made directly on the integration branch only if the issue is
+genuinely caused by the interaction between two otherwise-correct
+branches. Such commits must be clearly identified, e.g.
+`fix(integration): resolve session/report contract mismatch`. If the
+change logically belongs to one source branch, move or reproduce it there
+before final merge.
+
+### 12. Testing another agent's code
+
+An agent must not alter its own branch merely to temporarily consume
+another active agent's unmerged changes. If combined testing is required:
+create/use an integration worktree → merge required branches → test
+there. Applies to backend+frontend, app+QA Center, shared library+
+consumer, database migration+application, multi-agent feature work.
+
+### 13. Main branch protection
+
+Agents must not directly code on `main`. Agents must not
+`git push --force main`, `git reset main`, or rewrite main history.
+Expected lifecycle: main → agent branch → agent tests → integration
+branch when needed → combined tests → CI → review → merge to main.
+
+### 14. Merge-to-main rule
+
+An agent branch must not be merged into `main` merely because its local
+task tests pass when it depends on another active branch. If the feature
+requires several branches: all required branches → integration branch →
+complete qualification → PASS → Pull Request → main. `main` should
+receive a known-good integrated state.
+
+### 15. CI requirement
+
+Before merge into `main`, required CI must PASS. Agents may not disable
+tests, remove required checks, weaken assertions, or mark a flaky failure
+as PASS without evidence just to permit merge.
+
+### 16. Destructive Git operations
+
+Without explicit user authorization, agents must not run `git reset
+--hard`, `git clean -fd`/`-fdx`, `git checkout -- .`, `git restore .`,
+`git push --force`/`--force-with-lease` when they may affect user or
+another agent's work. Unrelated working-tree changes must be preserved.
+
+### 17. Shared files
+
+`PROJECT.yaml`, `AGENTS.md`, `WORKSPACE.yaml`, database migrations,
+shared schemas, shared API contracts, and CI configuration have
+workspace-wide impact. Before changing them, inspect potential effects on
+other active branches/projects. Shared-file changes should be small and
+explicitly reported.
+
+### 18. Database migrations
+
+Migration identifiers must not be independently chosen by two concurrent
+agents without checking current active work. Before creating a migration,
+`git fetch` and inspect migration heads. If multiple active branches need
+migrations, coordinate migration ordering during integration. Never
+silently rewrite another branch's already-published migration.
+
+### 19. Worktree cleanup
+
+Do not remove another active agent's worktree. After a branch has merged
+to main and is no longer needed, cleanup may be performed: `git worktree
+remove <path>`, `git branch -d <branch>`, `git worktree prune`. Never use
+forced deletion if there are uncommitted changes without explicit
+approval.
+
+### 20. Required agent startup procedure
+
+Every coding agent must begin by running:
+
+```bash
+pwd
+git rev-parse --show-toplevel
+git status --short
+git branch --show-current
+git worktree list
+```
+
+Then read `AGENTS.md` and `PROJECT.yaml` before editing. The agent must
+confirm it is operating in its assigned worktree and branch. If it
+detects another agent's branch or the shared/main checkout: **STOP** and
+create/use its own worktree.
+
+### 21. Required task completion report
+
+```text
+AGENT:
+WORKTREE:
+BRANCH:
+BASE COMMIT:
+
+COMMITS:
+- ...
+
+FILES CHANGED:
+- ...
+
+TESTS:
+- ...
+
+READY_FOR_INTEGRATION:
+YES / NO
+
+DEPENDENCIES:
+- branches required
+
+UNRELATED WIP:
+preserved / details
+
+RISKS:
+- ...
+```
+
+### 22. Integration completion report
+
+```text
+INTEGRATION_BRANCH:
+INTEGRATION_WORKTREE:
+
+MERGED_BRANCHES:
+- ...
+
+MERGE_CONFLICTS:
+- none / details
+
+TESTS:
+- ...
+
+CI:
+PASS / FAIL
+
+QUALIFICATION:
+PASS / FAIL
+
+READY_FOR_MAIN:
+YES / NO
+```
+
+### 23. Golden workflow
+
+```text
+                     main
+                      │
+          ┌───────────┴───────────┐
+          ▼                       ▼
+agent/codex/feature-A     agent/claude/feature-B
+          │                       │
+     worktree A               worktree B
+          │                       │
+       commit                   commit
+          └───────────┬───────────┘
+                      ▼
+            integration/feature
+                      │
+                 integration
+                    tests
+                      │
+                  full CI
+                      │
+                qualification
+                      │
+                    PASS
+                      │
+                     PR
+                      │
+                    main
+```
+
+Principles: **ISOLATE WHILE CODING. INTEGRATE THROUGH GIT. TEST THE
+COMBINATION. MERGE ONLY KNOWN-GOOD STATE.**
+
 ## Universal CI/CD Standard V1 — mandatory rules for every coding agent
 
 This section is normative for every agent working in this workspace. The
@@ -24,8 +338,9 @@ each project's own `PROJECT.yaml` is its machine-readable contract.
    if there is any chance of losing uncommitted changes.
 4. Never rewrite shared history.
 5. Never force push.
-6. Non-trivial changes must use an appropriate feature branch unless
-   explicitly instructed otherwise.
+6. Non-trivial changes must use an appropriate feature branch and its own
+   dedicated git worktree — see "Agent Worktree & Branch Isolation
+   Standard" above for the full, mandatory rule.
 
 ### Scope discipline
 

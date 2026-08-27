@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    name: Discover affected projects
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.changed.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+
+      - name: Validate every project contract
+        run: python3 scripts/ci/discover_projects.py
+
+      - name: Compute affected projects for this event
+        id: changed
+        run: |
+          set -Eeuo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+            RESULT=$(python3 scripts/ci/changed_projects.py --base "$BASE" --head "$HEAD" --json)
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+            # A fresh branch / force-push-free push always has a real
+            # "before" SHA on GitHub; if it is the all-zero sentinel
+            # (first push of a branch), fall back to running everything.
+            if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              RESULT=$(python3 scripts/ci/discover_projects.py --json | python3 -c "import json,sys; print(json.dumps({'affected_projects': sorted(r['code'] for r in json.load(sys.stdin) if r['status']=='MANAGED')}))")
+            else
+              RESULT=$(python3 scripts/ci/changed_projects.py --base "$BASE" --head "$HEAD" --json)
+            fi
+          else
+            # workflow_dispatch or anything else: run every managed project.
+            RESULT=$(python3 scripts/ci/discover_projects.py --json | python3 -c "import json,sys; print(json.dumps({'affected_projects': sorted(r['code'] for r in json.load(sys.stdin) if r['status']=='MANAGED')}))")
+          fi
+          echo "$RESULT"
+          PROJECTS=$(echo "$RESULT" | python3 -c "import json,sys; print(json.dumps(json.load(sys.stdin)['affected_projects']))")
+          echo "projects=$PROJECTS" >> "$GITHUB_OUTPUT"
+
+  project-ci:
+    name: ${{ matrix.project }}
+    needs: discover
+    if: needs.discover.outputs.projects != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.discover.outputs.projects) }}
+    uses: ./.github/workflows/_project-ci.yml
+    with:
+      project: ${{ matrix.project }}
+
+  ci-summary:
+    name: CI summary
+    needs: [discover, project-ci]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate result
+        run: |
+          if [ "${{ needs.discover.outputs.projects }}" = "[]" ]; then
+            echo "No managed project affected by this change -- nothing to gate on."
+            exit 0
+          fi
+          if [ "${{ needs.project-ci.result }}" != "success" ]; then
+            echo "One or more affected projects failed required CI gates."
+            exit 1
+          fi
+          echo "All affected projects passed their required CI gates."

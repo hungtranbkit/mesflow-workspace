@@ -1,0 +1,82 @@
+name: _project-ci (reusable)
+
+# Cross-repo reusable workflow for the multi-repo MESFlow workspace
+# (docs/CI_CD_STANDARD.md's confirmed repository model: mesflow/,
+# qa-center/, deploy-agent/, esp-kiosk/ are independent git repos with
+# their own remotes -- NOT a monorepo the standards repo can check out
+# nested source from).
+#
+# A child repo's own thin `.github/workflows/ci.yml` calls this via:
+#   uses: <STANDARDS_OWNER>/<STANDARDS_REPO>/.github/workflows/_project-ci.yml@<ref>
+#   with:
+#     project: mesflow-app
+#     standards_repository: <STANDARDS_OWNER>/<STANDARDS_REPO>   # once the
+#       standards repo has a real remote -- see docs/GITHUB_CI_CD_SETUP.md
+#     standards_ref: main
+#
+# actions/checkout with no `repository:`/`ref:` (the first step below)
+# checks out the CALLING repo's own ref (GitHub resolves workflow_call
+# checkouts against the caller's context, not this file's own repo) --
+# that is the project's real source. The second checkout explicitly pulls
+# in just the shared scripts/ci/ tooling from the standards repo, into a
+# side directory, so run_project.py's contract-reading logic is not
+# duplicated/copy-pasted into every child repo.
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: "This project's PROJECT.yaml project.code"
+        required: true
+        type: string
+      standards_repository:
+        description: "owner/repo of the workspace standards repo hosting scripts/ci/"
+        required: true
+        type: string
+      standards_ref:
+        description: "git ref of the standards repo to use"
+        required: false
+        type: string
+        default: main
+
+concurrency:
+  group: project-ci-${{ inputs.project }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    name: ${{ inputs.project }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout this project's own source
+        uses: actions/checkout@v4
+
+      - name: Checkout shared CI standard tooling
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.standards_repository }}
+          ref: ${{ inputs.standards_ref }}
+          path: .ci-standard
+          sparse-checkout: |
+            scripts/ci
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml
+
+      - name: Run required CI gates for ${{ inputs.project }} (single-project mode)
+        run: python3 .ci-standard/scripts/ci/run_project.py "${{ inputs.project }}" --local --root .
+
+      - name: Upload JUnit/test-results if present
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.project }}-test-results
+          path: test-results/*.xml
+          if-no-files-found: ignore

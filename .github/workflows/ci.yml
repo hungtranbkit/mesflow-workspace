@@ -1,0 +1,103 @@
+name: CI (workspace standards repo)
+
+# This repo IS the multi-repo workspace's standards/registry surface --
+# mesflow/, qa-center/, deploy-agent/, esp-kiosk/ are independent git
+# repos with their own remotes (confirmed: `git ls-files mesflow` from
+# this repo returns nothing -- see docs/CI_CD_STANDARD.md's repository
+# model finding). A fresh GitHub checkout of THIS repo therefore never
+# contains their source, so this workflow cannot and does not try to run
+# a "matrix over nested project source" the way Phase 1 originally
+# assumed. Each project's own repo runs its own thin ci.yml, which calls
+# this repo's reusable _project-ci.yml (see docs/CI_CD_STANDARD.md
+# section 5 / GITHUB_WORKFLOW ARCHITECTURE in the Phase 2 report).
+#
+# What THIS workflow actually gates: the CI/CD foundation code itself
+# (scripts/ci/*) and its workflow definitions.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  foundation-tests:
+    name: CI foundation unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml pytest
+      - run: python3 -m pytest scripts/ci/tests -q
+
+  workflow-syntax:
+    name: Validate workflow YAML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: |
+          python3 - <<'PY'
+          import glob, sys, yaml
+          ok = True
+          for path in sorted(glob.glob(".github/workflows/*.yml")):
+              try:
+                  with open(path, encoding="utf-8") as fh:
+                      yaml.safe_load(fh)
+                  print("OK", path)
+              except yaml.YAMLError as exc:
+                  print("FAIL", path, exc)
+                  ok = False
+          sys.exit(0 if ok else 1)
+          PY
+
+  registry-sanity:
+    name: Registry sanity (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true  # see the comment below -- expected to show
+                             # INVALID_CONTRACT here, that is correct, not a bug.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Discover projects (nested project source is NOT present on this runner)
+        run: |
+          echo "This checkout only has THIS repo's own tracked files."
+          echo "Registered projects in WORKSPACE.yaml will correctly show"
+          echo "INVALID_CONTRACT here (their PROJECT.yaml lives in a"
+          echo "different repo) -- that is expected, not a failure of the"
+          echo "standard. Real per-project validation happens in each"
+          echo "project's own repo via _project-ci.yml."
+          python3 scripts/ci/discover_projects.py
+
+  # The one stable, required status check to name in GitHub branch
+  # protection (docs/GITHUB_CI_CD_SETUP.md): "CI (workspace standards
+  # repo) / summary". Depends only on the REQUIRED jobs above --
+  # registry-sanity is informational (continue-on-error) and never gates.
+  summary:
+    name: summary
+    needs: [foundation-tests, workflow-syntax]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate result
+        run: |
+          if [ "${{ needs.foundation-tests.result }}" != "success" ] || [ "${{ needs.workflow-syntax.result }}" != "success" ]; then
+            echo "One or more required jobs failed."
+            exit 1
+          fi
+          echo "All required jobs passed."

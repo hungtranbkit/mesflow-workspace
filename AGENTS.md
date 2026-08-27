@@ -2,6 +2,99 @@
 
 This workspace contains related MESFlow projects. Treat them as one system, but do not blur project boundaries.
 
+Read this file before touching any code in this workspace, regardless of
+which coding agent you are (Claude Code, Codex, Gemini, Aider, or other).
+It is the normative agent policy for the whole workspace, not just the
+MESFlow app.
+
+## Universal CI/CD Standard V1 — mandatory rules for every coding agent
+
+This section is normative for every agent working in this workspace. The
+full standard is `docs/CI_CD_STANDARD.md`; GitHub-side setup is
+`docs/GITHUB_CI_CD_SETUP.md`. `WORKSPACE.yaml` is the project registry;
+each project's own `PROJECT.yaml` is its machine-readable contract.
+
+### Repository safety
+
+1. Inspect `git status`/`git log`/`git branch` before editing.
+2. Preserve unrelated WIP — do not stash, commit, or "clean up" work that
+   is not part of the current task.
+3. Never run destructive git cleanup/reset commands (`git reset --hard`,
+   `git clean -fd`, `git checkout -- .`, `git restore .`) on shared work
+   if there is any chance of losing uncommitted changes.
+4. Never rewrite shared history.
+5. Never force push.
+6. Non-trivial changes must use an appropriate feature branch unless
+   explicitly instructed otherwise.
+
+### Scope discipline
+
+1. Modify only the task-relevant project(s).
+2. Do not refactor unrelated projects.
+3. Shared code/contract changes require impact analysis for dependent
+   projects (see `WORKSPACE.yaml` `dependencies:` and each project's own
+   `PROJECT.yaml` `dependencies:`).
+4. Do not silently alter workspace-wide contracts (`WORKSPACE.yaml`, this
+   file, `docs/CI_CD_STANDARD.md`) as a side effect of a project-local task.
+
+### PROJECT.yaml
+
+1. Locate and read the affected project's `PROJECT.yaml` before assuming
+   how to build/test/deploy it.
+2. Treat `PROJECT.yaml` as the machine-readable contract for that project.
+3. Reuse its declared `commands.*` (preflight/test/build/smoke/deploy...).
+4. Do not invent a parallel build/test/deploy path when the project
+   already has one declared.
+
+### CI requirements
+
+1. Required CI gates for an affected project must pass.
+2. Do not disable or weaken tests to obtain PASS.
+3. Do not mark PASS if required tests were skipped unexpectedly.
+4. New behavior requires appropriate automated tests.
+5. Integration behavior should exercise real services/database where
+   repository convention already does so (e.g. MESFlow's
+   `scripts/test/docker-test.sh` against real PostgreSQL/API containers).
+
+### Release
+
+1. Build once per release commit.
+2. Bind the artifact to the exact git SHA it was built from.
+3. Compute an immutable artifact digest (SHA256).
+4. TEST and PRODUCTION must use the same artifact digest.
+5. Never rebuild after TEST qualification for Production promotion.
+
+### Deployment
+
+1. Verify target identity.
+2. Verify artifact identity/digest.
+3. Perform preflight.
+4. Backup/checkpoint where required.
+5. Deploy/migrate.
+6. Health + smoke + version verification.
+7. Capture evidence.
+8. Roll back on failure where supported.
+9. Production requires explicit human approval — every time, no
+   exceptions.
+
+### Honesty
+
+Do not fabricate PASS. Use exactly one of: `PASS`, `FIX_REQUIRED`,
+`BLOCKED`, `PASS_FOUNDATION`, matched to real evidence.
+
+### Deploy Agent rule
+
+Do not add new CI/CD responsibilities to Deploy Agent. Deploy Agent is
+legacy/migration-scope execution (see "Deploy Agent rules" below and
+`docs/CI_CD_STANDARD.md` §Deploy Agent migration) unless a task explicitly
+tasks you with changing it.
+
+### Reporting
+
+Every task must report: files changed, tests, local verification,
+remaining risks, and unrelated WIP preserved (untouched, not silently
+discarded).
+
 ## Permanent rules (workspace/deployment restructure)
 
 See `docs/operations/SOURCE_OF_TRUTH.md`, `BUILD_AND_PROMOTE.md`,
@@ -49,26 +142,41 @@ each rule.
 
 ## Projects
 
+The authoritative machine-readable list is `WORKSPACE.yaml`. In prose:
+
 - `mesflow/` — MESFlow core backend/PostgreSQL application (Flask/Jinja
   Classic UI still lives here too, until retired per the migration plan).
+  Has its own git repo, `PROJECT.yaml`, and is the CI/CD Standard V1
+  reference implementation (see `docs/CI_CD_STANDARD.md`).
 - `mesflow-web/` — React/TypeScript frontend (Vite), developed in parallel
   with Classic UI against the same `/api/*` backend/database. Owns page
   layout/navigation/forms/tables/drawers/state; never accesses PostgreSQL
   directly and never reimplements backend business/RBAC/validation logic.
   See `reports/FRONTEND_SEPARATION_AUDIT.md`,
-  `docs/architecture/FRONTEND_BACKEND_SEPARATION.md`.
+  `docs/architecture/FRONTEND_BACKEND_SEPARATION.md`. Has its own git
+  repo; no `PROJECT.yaml` yet (UNMANAGED per the CI/CD standard).
 - `deploy-agent/` — Deploy Agent used to upload, validate, deploy, verify and roll back MESFlow/QA releases.
+- `deploy-agent-v2/` — parallel/successor effort to `deploy-agent/`. Has a
+  `PROJECT.yaml` but is not yet in `WORKSPACE.yaml`'s registry (see the
+  note there) — treat as not yet a peer of `deploy-agent/` without an
+  explicit task saying so.
 - `qa-center/` — independent QA Center / realistic soak / regression runner.
 - `esp-kiosk/` — ESP32-S3 kiosk firmware and device UI.
+- `esp32-cyd-clock/` — separate ESP32 firmware project; no `PROJECT.yaml`
+  yet (UNMANAGED per the CI/CD standard).
 - `server-agent/` — optional server monitor / SSH / Docker / service health agent.
 - `bootstrap/` — MESFlow Bootstrap / Recovery Console: small, independent
   host/systemd service (port 8098) for a brand-new Ubuntu server; prepares
   the minimum environment (OpenSSH, Docker) and installs/recovers the Deploy
   Agent only. See `bootstrap/AGENTS.md`, `reports/SERVER_BOOTSTRAP_RECOVERY.md`.
+  No `PROJECT.yaml` yet (UNMANAGED per the CI/CD standard).
 - `docs/` — architecture, operations, UI and test documentation.
 - `artifacts/` — generated release ZIPs only; never production runtime data.
 - `reports/` — review/test reports.
 - `test-data/` — local-only fixtures/demo data.
+- `scripts/ci/` — Universal CI/CD Standard V1 foundation: project
+  discovery, changed-project detection, per-project stage runner, release
+  manifest/digest tooling. See `docs/CI_CD_STANDARD.md`.
 
 ## Global safety
 
@@ -110,9 +218,22 @@ Examples:
 - ESP screen/scanner/keypad/offline firmware -> `esp-kiosk/`
 - host SSH/service/Docker monitoring -> `server-agent/`
 - fresh-server prep + Deploy Agent install/recovery console -> `bootstrap/`
+- workspace-wide CI/CD foundation (discovery, changed-project detection,
+  contract runner, release manifest) -> `scripts/ci/`, not any one project
 
 Do not fix a MESFlow bug by hiding it in QA or Deploy Agent.
 Do not fix a firmware bug by weakening server validation.
+
+## Deploy Agent / QA / Tutorial incident rules
+
+Before modifying package, promotion, or tutorial code, read
+`docs/operations/DEPLOY_AGENT_QA_TUTORIAL_TROUBLESHOOTING.md`. Keep
+version-doctor mandatory; include script dependencies in isolated
+fixtures; do not hard-code current versions; use the correct dependency
+test environment; never nest writable binds below read-only binds;
+preflight tutorial scripts before Docker; use `url_for()` for `/agent`;
+distinguish missing target config from software failure; and require real
+smoke evidence before PASS.
 
 ## Deployed Source Reconciliation Rule
 
@@ -247,6 +368,11 @@ Expected topology:
 - Docker network `mesflow-edge` where configured
 
 Upload UI must have a visible fallback action; never rely on only one fragile JavaScript auto-submit path.
+
+Deploy Agent is legacy/migration-scope execution for now — see
+"Deploy Agent rule" above and `docs/CI_CD_STANDARD.md` §Deploy Agent
+migration. Do not add new CI/CD responsibilities to it unless a task
+explicitly asks you to.
 
 ## QA Center rules
 

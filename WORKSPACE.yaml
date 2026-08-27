@@ -14,6 +14,23 @@ workspace:
 # build/test/deploy script, no VERSION file) and is intentionally omitted
 # until it has real lifecycle evidence. No ai-loop/ai-reviewer directory
 # exists in this repository.
+#
+# Workspace CI/CD Standard V1 (docs/CI_CD_STANDARD.md) note: this file is
+# the canonical registry `scripts/ci/discover_projects.py` prefers. Since
+# this assessment, new directories with their own PROJECT.yaml have
+# appeared on disk but are deliberately NOT added here yet (registering a
+# sibling project is a scope/ownership decision this CI/CD-foundation pass
+# does not make on its own):
+#   - deploy-agent-v2/  (PROJECT.yaml present, VERSION 2.0.0; parallel/
+#     successor effort to deploy-agent/, not self-hosting its own
+#     build/artifact pipeline yet)
+#   - mesflow-web/      (real project per this file's own history / root
+#     AGENTS.md "Projects" list; no PROJECT.yaml yet)
+#   - esp32-cyd-clock/  (VERSION file present; no PROJECT.yaml, not yet
+#     documented as a workspace project anywhere)
+# The discovery tool reports these as UNREGISTERED_CONTRACT /
+# UNMANAGED rather than silently ignoring or silently promoting them --
+# see the "PROJECT DISCOVERY" section of the CI/CD standard report.
 projects:
   - code: mesflow-app
     name: MESFlow App

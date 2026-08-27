@@ -58,3 +58,30 @@ def test_no_changed_paths_means_no_affected_projects(fake_workspace, monkeypatch
     result = cp.affected_projects([])
     assert result["affected_projects"] == []
     assert result["shared_path_expansion"] is False
+
+
+def test_unmanaged_project_change_produces_a_warning_not_a_silent_pass(fake_workspace, monkeypatch):
+    import workspace
+    import changed_projects as cp
+    monkeypatch.setattr(cp, "discover", lambda: workspace.discover(fake_workspace))
+    monkeypatch.setattr(cp, "load_registry", lambda: workspace.load_registry(fake_workspace))
+
+    # gamma (fixture) is a real project dir with no PROJECT.yaml -- UNMANAGED.
+    result = cp.affected_projects(["gamma/AGENTS.md"])
+    assert result["affected_projects"] == []
+    assert len(result["warnings"]) == 1
+    assert "gamma" in result["warnings"][0]
+    assert "UNMANAGED" in result["warnings"][0]
+
+
+def test_change_with_no_project_at_all_produces_no_warning(fake_workspace, monkeypatch):
+    # A path that doesn't belong to any known project (managed or not) is
+    # simply irrelevant -- not every unmatched path is a "finding".
+    import workspace
+    import changed_projects as cp
+    monkeypatch.setattr(cp, "discover", lambda: workspace.discover(fake_workspace))
+    monkeypatch.setattr(cp, "load_registry", lambda: workspace.load_registry(fake_workspace))
+
+    result = cp.affected_projects(["README.md"])
+    assert result["affected_projects"] == []
+    assert result["warnings"] == []

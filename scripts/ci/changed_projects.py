@@ -73,21 +73,26 @@ def _git_dirty_names() -> list[str]:
 def affected_projects(changed_paths: list[str]) -> dict:
     records = discover()
     managed = [r for r in records if r.status == MANAGED]
+    unmanaged = [r for r in records if r.status != MANAGED]
     registry = load_registry()
     shared_prefixes = _shared_prefixes(registry)
 
     direct: set[str] = set()
     shared_hit = False
     reasons: dict[str, set[str]] = {}
+    warnings: list[str] = []
 
     def mark(code: str, reason: str):
         reasons.setdefault(code, set()).add(reason)
 
+    def under_root(path: str, root: str) -> bool:
+        root_prefix = root.rstrip("/") + "/"
+        return path == root or path.startswith(root_prefix)
+
     for path in changed_paths:
         matched_direct = False
         for r in managed:
-            root_prefix = r.root.rstrip("/") + "/"
-            if path == r.root or path.startswith(root_prefix):
+            if under_root(path, r.root):
                 direct.add(r.code)
                 mark(r.code, f"direct:{path}")
                 matched_direct = True
@@ -97,6 +102,20 @@ def affected_projects(changed_paths: list[str]) -> dict:
             if path == prefix.rstrip("/") or path.startswith(prefix):
                 shared_hit = True
                 break
+        else:
+            # Not under any managed project's root and not a shared path --
+            # check whether it belongs to a project this workspace knows
+            # about but cannot gate CI on (UNMANAGED/INVALID_CONTRACT/
+            # UNREGISTERED_CONTRACT). This must never be silent: a real
+            # change with no CI gate to run against it is a finding, not
+            # nothing (docs/CI_CD_STANDARD.md section 13/15).
+            for r in unmanaged:
+                if under_root(path, r.root):
+                    warnings.append(
+                        f"{path}: belongs to project '{r.code}' (status={r.status}) -- "
+                        "no managed CI gate runs for it"
+                    )
+                    break
 
     affected = set(direct)
     if shared_hit:
@@ -122,6 +141,7 @@ def affected_projects(changed_paths: list[str]) -> dict:
         "affected_projects": sorted(affected),
         "shared_path_expansion": shared_hit,
         "reasons": {k: sorted(v) for k, v in reasons.items()},
+        "warnings": warnings,
     }
 
 
@@ -153,6 +173,10 @@ def main(argv: list[str] | None = None) -> int:
         for code in result["affected_projects"]:
             reasons = ", ".join(result["reasons"].get(code, []))
             print(f"  - {code}  ({reasons})")
+        if result["warnings"]:
+            print("WARNING -- changes with no managed CI gate:")
+            for w in result["warnings"]:
+                print(f"  ! {w}")
     return 0
 
 

@@ -9,18 +9,45 @@ project already has or should adopt, and the shared logic
 Every coding agent must read this file, `AGENTS.md`, and the affected
 project's `PROJECT.yaml` before making a non-trivial change.
 
-## 0. Terms
+## 0. Terms and repository model
 
 - **Workspace** — this repository, `/home/dell/workspace/mesflow`.
 - **Project** — a directory with its own version/build/test/artifact/
   deploy lifecycle, registered in `WORKSPACE.yaml` and described by its
   own `PROJECT.yaml`. Today: `mesflow/`, `deploy-agent/`, `qa-center/`,
   `esp-kiosk/`. See the "PROJECT DISCOVERY" section of the most recent
-  `AGENT RULES`/audit report for the full current classification
-  (MANAGED / UNMANAGED / registry gaps).
+  audit report for the full current classification (MANAGED / UNMANAGED /
+  registry gaps).
 - **Contract** — a project's `PROJECT.yaml`: machine-readable
   preflight/test/build/smoke/deploy commands, artifact strategy, and
   deployment policy.
+
+**Repository model (verified, not assumed): multi-repo workspace, not a
+monorepo.** `mesflow/`, `qa-center/`, `deploy-agent/`, `esp-kiosk/`,
+`mesflow-web/` each have their own `.git` and their own remote already
+(`git ls-files mesflow` from the outer repo returns nothing — a `.git`
+boundary, not a tracked subtree). The outer workspace repo is the
+standards/registry surface (`AGENTS.md`, `WORKSPACE.yaml`, `docs/`,
+`scripts/ci/`, `.github/workflows/`), not a container of the other
+repos' source, and currently has no GitHub remote of its own. This has
+one concrete, load-bearing consequence: **a fresh GitHub checkout of the
+outer repo never contains a project's actual source**, so CI cannot run
+as "one matrix job per project, checked out from the outer repo." See
+§8 for the resulting architecture.
+
+`scripts/ci/*` therefore supports two modes:
+
+- **discover mode** (default) — used on this dev machine, where every
+  project really is a sibling directory: `discover()` reads
+  `WORKSPACE.yaml` + does the sibling scan, exactly as documented below.
+- **local/single-project mode** (`--local --root <path>`) — used from
+  inside a project's own CI (a normal single-repo checkout with no
+  siblings present at all): `workspace.load_local_project()` reads
+  `<path>/PROJECT.yaml` directly, no registry, no sibling scan. Every
+  `PROJECT.yaml`'s own `source.root: .` already means "relative to this
+  project's own root," so local mode's `record.root = "."` makes
+  `working_directory` resolution, `artifacts.directory`, etc. behave
+  identically in both modes.
 
 ## 1. Git workflow
 
@@ -109,6 +136,18 @@ No exceptions, no "rebuild and it should be equivalent." This is checked
 mechanically by `scripts/ci/same_artifact_check.py` (§7), not left to
 reviewer judgement.
 
+### Dirty-tree policy
+
+An **official** release manifest (`scripts/ci/release_manifest.py`,
+called from `_project-release.yml`) refuses by default to build from a
+project tree with uncommitted changes (`DIRTY_TREE_BLOCKED`) — a release
+must be traceable to one exact, clean, committed commit. A local/dev
+build may pass `--allow-dirty`; the resulting manifest is then marked
+`"dirty": true, "release_type": "NON_RELEASE"` so it can never be
+mistaken for an official release artifact downstream (e.g. by
+`same_artifact_check.py`, which compares digests, not this flag, but a
+human/CI reading the manifest sees it immediately).
+
 ## 5. Evidence
 
 Every release/deploy record should carry, at minimum:
@@ -178,28 +217,58 @@ When dependency/shared-path metadata is incomplete, the tool is
 conservative: it runs more projects rather than silently skipping one it
 is unsure about (safety over speed).
 
-## 8. CI matrix
+## 8. CI matrix and cross-repo workflow architecture
+
+Given the multi-repo model (§0), the CI matrix is split across two
+layers instead of one:
 
 ```
-detect_projects
-  -> matrix
-     |- mesflow
-     |- qa-center
-     |- ...
+outer/standards repo (.github/workflows/)
+  ci.yml               -- gates the standard itself (scripts/ci/tests,
+                           workflow YAML syntax); cannot and does not try
+                           to run nested project source it doesn't have
+  _project-ci.yml      -- reusable (on: workflow_call); called cross-repo
+  _project-release.yml -- reusable (on: workflow_call); called cross-repo
+
+each child repo (mesflow/, qa-center/, ...)
+  .github/workflows/ci.yml (thin)
+    uses: <owner>/<standards-repo>/.github/workflows/_project-ci.yml@<ref>
+    with: {project: <code>, standards_repository: <owner>/<standards-repo>}
 ```
 
-Independent affected projects run in parallel. Each matrix job invokes
-that project's own contract via the generic runner:
+`_project-ci.yml`'s first step is a plain `actions/checkout@v4` with no
+`repository:`/`ref:` override — GitHub resolves that against the
+*calling* repo's own ref (the run's `github.repository` context is the
+caller's, not the reusable workflow file's own repo), so this checks out
+the project's real source. A second `actions/checkout@v4` explicitly
+pulls in just `scripts/ci/` from the standards repo into `.ci-standard/`
+(sparse checkout), so the contract-reading logic is never copy-pasted
+into every child repo. The job then runs, in local/single-project mode:
 
 ```bash
-scripts/ci/run_project.py mesflow --stage preflight
-scripts/ci/run_project.py mesflow --stage test
+python3 .ci-standard/scripts/ci/run_project.py <project> --local --root .
 ```
 
 CI never hard-codes a project's own implementation into the workflow YAML
-— the YAML only invokes `run_project.py <project> --stage <stage>` for
-each affected project/stage pair; the actual command lives in that
-project's `PROJECT.yaml`.
+— it only invokes `run_project.py <project> [--local --root .]`; the
+actual command lives in that project's own `PROJECT.yaml`.
+
+On this dev machine (where every project really is a sibling directory),
+the same tooling also works in the original discover-mode form, useful
+for local verification:
+
+```bash
+scripts/ci/run-project mesflow-app --stage preflight
+scripts/ci/run-project mesflow-app --stage test
+```
+
+**Status of activation**: each child repo's thin `ci.yml` exists today as
+`ci-standard.yml`, deliberately left `workflow_dispatch`-only with a
+placeholder `standards_repository` (the standards repo has no GitHub
+remote yet — see `docs/GITHUB_CI_CD_SETUP.md` §0/§7 for the exact
+activation steps). It is not wired into `pull_request`/`push` until that
+reference is real, so it can never silently break a repo's real CI in the
+meantime.
 
 ## 9. Deploy Agent
 
@@ -303,6 +372,17 @@ else declared is optional/best-effort. This means every existing
 
 ## 12. Artifact model
 
+**`git_sha` is always the project's own repository HEAD, never the outer
+workspace repo's SHA** — load-bearing given §0's multi-repo model:
+`scripts/ci/release_manifest.py`'s `_git_sha()` resolves `git rev-parse
+HEAD` with `cwd` set to the project's own root first (which, for an
+independent nested repo like `mesflow/`, IS that repo, so this is correct
+by construction), falling back to the workspace root only if the project
+root is not itself a git repository. Regression-tested directly:
+`scripts/ci/tests/test_local_project_mode.py::test_artifact_git_sha_is_the_projects_own_repo_head_not_an_outer_workspace_sha`
+builds two repos with deliberately different histories and asserts the
+manifest's `git_sha` matches the project's, not the outer one's.
+
 Each project builds its own artifact under its own name/version — never
 one combined workspace artifact:
 
@@ -329,7 +409,13 @@ one; this is not a second source of truth for version):
 ## 13. Unmanaged projects
 
 A project without a `PROJECT.yaml` is reported as `UNMANAGED`, never
-silently passed. Policy:
+silently passed. `scripts/ci/changed_projects.py` surfaces this as an
+explicit `warnings` entry (`"<path>: belongs to project '<code>'
+(status=<status>) -- no managed CI gate runs for it"`) whenever a changed
+path falls under an unmanaged/unregistered/invalid project's root and
+isn't already covered by a managed project or shared-path expansion — a
+silent, empty affected-projects list would otherwise look identical to
+"nothing relevant changed." Policy:
 
 - A PR that does **not** touch an unmanaged project's files: CI does not
   block on it. It is listed in the CI summary as "unmanaged, not run."

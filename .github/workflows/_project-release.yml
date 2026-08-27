@@ -1,0 +1,85 @@
+name: _project-release (reusable)
+
+# Cross-repo reusable release workflow -- same repository-model rationale
+# as _project-ci.yml: build once, locate the artifact, compute an
+# immutable SHA256 manifest, all in single-project (--local) mode against
+# the CALLING repo's own checked-out source. Stops there: no deploy step.
+# PRODUCTION_CD stays BLOCKED_BY_DEPLOY_RUNTIME (docs/CI_CD_STANDARD.md
+# section 10) until a generic deployment runtime exists -- this workflow
+# is never extended with an ad hoc ssh/deploy step to work around that.
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        required: true
+        type: string
+      standards_repository:
+        required: true
+        type: string
+      standards_ref:
+        required: false
+        type: string
+        default: main
+
+# One release build per project at a time -- never cancel an in-progress
+# build (unlike CI, which is safe to supersede); a second trigger queues
+# behind it instead (docs/CI_CD_STANDARD.md section 15).
+concurrency:
+  group: project-release-${{ inputs.project }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build once + manifest (${{ inputs.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout this project's own source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # release manifests bind to an exact commit; keep full history available
+
+      - name: Checkout shared CI standard tooling
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.standards_repository }}
+          ref: ${{ inputs.standards_ref }}
+          path: .ci-standard
+          sparse-checkout: |
+            scripts/ci
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml
+
+      - name: Required CI gates must pass before building a release
+        run: python3 .ci-standard/scripts/ci/run_project.py "${{ inputs.project }}" --local --root .
+
+      - name: Build once
+        run: python3 .ci-standard/scripts/ci/run_project.py "${{ inputs.project }}" --local --root . --stage build
+
+      - name: Locate artifact
+        id: artifact
+        run: echo "path=$(python3 .ci-standard/scripts/ci/locate_artifact.py "${{ inputs.project }}" --local --root .)" >> "$GITHUB_OUTPUT"
+
+      - name: Write immutable release manifest (SHA256) -- refuses a dirty tree
+        run: |
+          python3 .ci-standard/scripts/ci/release_manifest.py "${{ inputs.project }}" "${{ steps.artifact.outputs.path }}" \
+            --local --root . --builder github-actions --out "manifest-${{ inputs.project }}.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest-${{ inputs.project }}
+          path: manifest-${{ inputs.project }}.json
+
+      - name: Production CD status
+        run: |
+          echo "TEST qualification: reuses this project's own deployment.test.enabled contract."
+          echo "PRODUCTION_CD: BLOCKED_BY_DEPLOY_RUNTIME -- no generic workspace deployment runtime exists yet."
+          echo "Promotion, if any, is a separate, human-approved action outside this workflow."

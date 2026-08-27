@@ -207,6 +207,41 @@ def project_by_code(records: list[ProjectRecord], code: str) -> ProjectRecord | 
     return None
 
 
+def load_local_project(root: Path, expected_code: str | None = None) -> ProjectRecord:
+    """Single-project mode: read `root/PROJECT.yaml` directly, with no
+    WORKSPACE.yaml registry and no sibling-project scan at all.
+
+    This is the multi-repo-workspace case: `mesflow/`, `qa-center/`, etc.
+    are independent git repositories with their own remotes (confirmed via
+    `git ls-files <dir>` returning nothing from the outer workspace repo --
+    a `.git` boundary, not a tracked subtree). A GitHub Actions checkout of
+    one of those repos on its own runner never has the sibling directories
+    or WORKSPACE.yaml present at all, so `discover()`'s multi-project
+    machinery does not apply there -- this is the function a child repo's
+    own thin CI workflow (via the shared `_project-ci.yml` reusable
+    workflow) calls instead, treating its own checkout root as the one and
+    only project. `root` is always the checkout root; the resulting
+    record's `.root` is `"."` (matching every real PROJECT.yaml's own
+    `source.root: .`), so run_project.py's working_directory resolution
+    behaves identically to discover()-mode.
+    """
+    manifest_path = root / "PROJECT.yaml"
+    contract, issues = _load_project_yaml(manifest_path)
+    code = (contract or {}).get("project", {}).get("code") or expected_code or root.name
+    if expected_code and contract and code != expected_code:
+        issues = issues + [f"PROJECT.yaml project.code={code!r} does not match expected {expected_code!r}"]
+    status = MANAGED if contract and not issues else INVALID_CONTRACT
+    return ProjectRecord(
+        code=code,
+        root=".",
+        manifest="PROJECT.yaml" if manifest_path.exists() else None,
+        status=status,
+        registered=False,
+        issues=issues,
+        contract=contract,
+    )
+
+
 def required_stages(record: ProjectRecord) -> list[str]:
     """Which commands.* keys are mandatory CI gates for this project.
 

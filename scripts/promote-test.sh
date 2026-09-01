@@ -59,10 +59,19 @@ LOGIN_PAGE="$(curl -fsS -c "$JAR" "$TARGET_AGENT_URL/login")"
 # do) -- `|| true` so `set -o pipefail` doesn't treat "no match" as fatal
 # and silently abort before the actual login POST below.
 CSRF="$(printf '%s' "$LOGIN_PAGE" | grep -oP 'name="csrf" value="\K[^"]+' | head -1 || true)"
+# Sending an explicit but empty `csrf=` field (as opposed to omitting the
+# field entirely, what a real browser does when the form has no such
+# hidden input) makes some Agent versions reject the login silently -- no
+# Set-Cookie, no error body, just a 302 back to /login (confirmed by hand
+# against the real Production Test Agent, 2.24.37, while running this
+# task -- the newer 2.24.49 tolerates it, but don't rely on that). Only
+# include the field when a real token was actually found.
+CSRF_ARGS=()
+[[ -n "$CSRF" ]] && CSRF_ARGS=(--data-urlencode "csrf=$CSRF")
 curl -fsS -b "$JAR" -c "$JAR" -o /dev/null \
   --data-urlencode "username=$TARGET_USER" \
   --data-urlencode "password=$TARGET_PASSWORD" \
-  --data-urlencode "csrf=$CSRF" \
+  "${CSRF_ARGS[@]}" \
   "$TARGET_AGENT_URL/login"
 PAGE="$(curl -fsS -b "$JAR" "$TARGET_AGENT_URL/")"
 CSRF2="$(printf '%s' "$PAGE" | grep -oP 'name="csrf" value="\K[^"]+' | head -1)"

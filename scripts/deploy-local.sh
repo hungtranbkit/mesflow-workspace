@@ -18,7 +18,10 @@ JAR="$(mktemp)"; trap 'rm -f "$JAR"' EXIT
 
 echo "Logging in to $AGENT_URL ..."
 LOGIN_PAGE="$(curl -fsS -c "$JAR" "$AGENT_URL/login")"
-CSRF="$(printf '%s' "$LOGIN_PAGE" | grep -oP 'name="csrf" value="\K[^"]+' | head -1)"
+# The login form itself carries no CSRF field (only authenticated pages
+# do) -- `|| true` so `set -o pipefail` doesn't treat "no match" as fatal
+# and silently abort before the actual login POST below.
+CSRF="$(printf '%s' "$LOGIN_PAGE" | grep -oP 'name="csrf" value="\K[^"]+' | head -1 || true)"
 curl -fsS -b "$JAR" -c "$JAR" -o /dev/null \
   --data-urlencode "username=$AGENT_USER" \
   --data-urlencode "password=$AGENT_PASSWORD" \

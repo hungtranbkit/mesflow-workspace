@@ -247,17 +247,43 @@ catch-all branch, so an unrecognized line (as `kiosk-token:` is, on this
 binary) is silently dropped — exactly the observed symptom. `api-endpoint:`
 and `expected-env:` predate 08-27 and worked normally for the same reason.
 
-**Net effect**: the device is fully bound and its bootstrap/heartbeat/
-UI-sync/journal all work correctly on `prod.mesflow.net` over `http://`,
-but it **cannot authenticate `/events` at all** until reflashed with
-current source (`0.16.0`, includes both the token command and everything
-else since 08-27) — a materially different, riskier action (physical
-reflash of a device holding real journal data) than the serial config
-changes above, so **not attempted without explicit sign-off**. The
-still-open HTTPS crash (Finding 1) is a separate bug in the same current
-source and would need its own root-cause fix before a reflash could safely
-re-enable HTTPS; a reflash today would still need to ship on `http://`
-unless that's diagnosed too.
+**Reflashed (user-approved), data preserved.** Built DEV profile from
+current source (`arduino-cli compile`, FQBN unchanged) → `fw_version=0.16.0
+build_id=8e784a0-20260902T082137Z-dev`; included one real, evidence-based
+uncommitted fix already in the working tree (`hardware_pins.h`:
+`SCANNER_BAUD` 9600→115200, measured on this exact unit 2026-08-30). Safety
+check before flashing: the project's `arduino-cli upload` writes only
+`bootloader` (0x0), `partitions.bin` (0x8000, 4KB, ends exactly at the
+`nvs` partition's 0x9000 start), `boot_app0` (0xe000) and the app image
+(0x10000 into `app0`) — `nvs` (0x9000, wifi/api_endpoint/expected_env/
+kiosk_token) and `spiffs` (0x670000, journal + UI bundle) are never in the
+write range; same `PartitionScheme=default_8MB` as already flashed, so the
+rewritten partition table is byte-identical, not a relayout. Captured a
+full `debug-device-state` snapshot immediately before flashing as a
+baseline. `arduino-cli upload` completed (hash verified, RTS reset) in
+~9s. **Post-flash, verified against the baseline**: WiFi/api_endpoint/
+expected_environment all preserved (no re-provisioning needed — reconnected
+and bootstrapped on its own), `journal.records=17` unchanged, no crc_fail,
+`mismatch=false`. One already-`HUMAN_REVIEW`'d record (`328008`) was
+retried once on this fresh boot (expected — `human_review` blocks retries
+*within* a boot, not across one) and got 401 again, correctly, since the
+token still hadn't been sent yet at that instant.
+
+Re-minted a fresh token (`/approve`, verified `200` via `GET /state` before
+touching the device, as before) and sent `kiosk-token:` — this time
+**accepted** (`IDENTITY_KIOSK_TOKEN_SET` + `CONFIG_KIOSK_TOKEN_SET ok:true`,
+no reboot). Confirmed healthy afterward: 2 consecutive `HEARTBEAT_SENT
+status=200`, journal unchanged (`records=17, pending=0`, no new churn).
+`network_state` still reads `AUTH_BLOCKED` — this is a live reflection of
+`last_http_status` from the pre-token 401 (`network_state.cpp`), not sticky;
+it clears on the next successful `/events` call, which needs a real scan
+to trigger (still `HARDWARE_VERIFICATION_PENDING` for the full physical
+flow — everything up to and including auth is now proven, the last mile
+needs an actual operator badge/scan).
+
+**Still open**: Finding 1 (HTTPS crash) is unfixed in this same source —
+the device remains on `http://` by design; a reflash alone does not
+resolve it, it needs separate root-cause work.
 
 Current live device state (server-verified): `server.environment=TEST`,
 `expected_environment=TEST`, `mismatch=false`, `server.version=71.0.0.207`
@@ -294,13 +320,11 @@ provisioned against this hostname**, which resolved the blocker as
 2. `KIOSK-LASER-01`'s HTTPS crash (§6, Finding 1) — needs real firmware
    investigation/fix + reflash; device is left working on plain HTTP as an
    interim state. Not attempted here (out of scope for a serial remap).
-3. `KIOSK-LASER-01`'s token re-provisioning (§6, Finding 4) — station
-   created, device approved, fresh token minted and server-verified, but
-   it cannot be delivered: the running firmware (built 2026-08-27) predates
-   the `kiosk-token:` serial command (added 2026-08-28) entirely. Needs a
-   real firmware rebuild from current source (`0.16.0`) + physical reflash
-   — explicit sign-off needed before attempting (real device, real journal
-   data, a different risk class than a serial config change).
+3. ~~`KIOSK-LASER-01`'s token re-provisioning~~ — **done**: reflashed to
+   `0.16.0` (user-approved, data verified intact pre/post), fresh token
+   provisioned and confirmed working (`HEARTBEAT_SENT status=200`). Only
+   the final physical scan→start→finish exercise remains
+   `HARDWARE_VERIFICATION_PENDING`.
 
 None of these block the backend/server layer's own readiness.
 

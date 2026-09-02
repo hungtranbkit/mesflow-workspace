@@ -344,14 +344,14 @@ against real infrastructure, never given a live workload to break).
    venv). A version bump is a real, if small, decision (needs a rebuild
    + the same QA gate as any other change) — flagged, not silently
    changed, to stay inside "no scope creep."
-6. **113 GB Docker build cache / 80 GB reclaimable** on this local
-   machine (`docker system df`). Disk is healthy (53%/56%, both well
-   under any warning threshold from the earlier audit). `docker builder
-   prune` would only remove layer cache (never images/containers/
-   volumes) so carries none of the data risk `docker system prune -a`/
-   `volume prune` do — but given this session's standing rule against
-   prune-class commands, this is reported, not run, pending an explicit
-   yes/no.
+6. ~~113 GB Docker build cache / 80 GB reclaimable~~ — **done, user-
+   approved**: `docker builder prune -f` (build-cache-only, never touches
+   images/containers/volumes — a different, non-destructive operation
+   from the `docker system prune -a`/`volume prune` this session's
+   standing rule is about). Reclaimed the full 80.06GB; disk usage
+   53%→36% (232GB→157GB used out of 468GB). Verified after: all 10 real
+   containers still `Up`/`healthy`, Images/Containers/Volumes counts in
+   `docker system df` unchanged.
 
 ## 8. Commits this pass
 

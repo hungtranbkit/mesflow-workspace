@@ -223,15 +223,41 @@ on the now-terminal records). **No data was lost** — journal recovery
 (`recovered=1362, crc_fail=0`) was clean and identical across every reboot
 of this session.
 
-**Finding 3 (blocks full remediation): re-approving the device requires a
-`station_id`, and `mesflow_prodtest`'s `stations` table is currently
-empty.** `POST /api/kiosk-identities/2/approve` (admin/manager-session,
-mints a fresh plaintext token) requires a real `station_id` in its body —
-this is a business/setup decision (which physical station this kiosk
-belongs to), not something to infer from evidence, so **not attempted**.
-Once a station exists and the user names it, the remaining fix is
-mechanical: call `/approve`, then `kiosk-token:<token>` over serial (no
-reboot needed) — no further hardware risk.
+**Finding 3 (resolved): station created, device approved, token minted +
+verified.** User named the station "Laser"; created via the real API
+(`POST /api/stations`, `id=1 code=LASER`, not a raw DB write). Called
+`POST /api/kiosk-identities/2/approve {station_id:1}` → `200 ok`, identity
+now `station_id=1, status=ACTIVE`. The fresh plaintext token was verified
+live against the real server (`GET /api/kiosk/v2/state?device_id=...` with
+the token header → `200`, confirming the credential itself is correct and
+active) before ever touching the device — the value was held only in
+process memory and never printed or written to disk.
+
+**Finding 4 (new, blocks token delivery): the device's running firmware
+predates the `kiosk-token:` serial command entirely.** Sending
+`kiosk-token:<token>` (9 attempts, 2 independently-minted tokens, up to
+15s read windows) produced **no response at all** — not even a rejection.
+Root-caused, not guessed: the running binary is `fw_version=0.15.2,
+build_id=7d7c2a2-20260827T114822Z-dev` (built 2026-08-27), but
+`kiosk-token:` was added by commit `1ebe359` ("X-Kiosk-Token device
+authorization on /events and /state (P0 companion)"), dated **2026-08-28
+17:44:39** — one day *after* this device's binary was built. Confirmed by
+reading `poll_serial_provisioning()`: the if/else command chain has no
+catch-all branch, so an unrecognized line (as `kiosk-token:` is, on this
+binary) is silently dropped — exactly the observed symptom. `api-endpoint:`
+and `expected-env:` predate 08-27 and worked normally for the same reason.
+
+**Net effect**: the device is fully bound and its bootstrap/heartbeat/
+UI-sync/journal all work correctly on `prod.mesflow.net` over `http://`,
+but it **cannot authenticate `/events` at all** until reflashed with
+current source (`0.16.0`, includes both the token command and everything
+else since 08-27) — a materially different, riskier action (physical
+reflash of a device holding real journal data) than the serial config
+changes above, so **not attempted without explicit sign-off**. The
+still-open HTTPS crash (Finding 1) is a separate bug in the same current
+source and would need its own root-cause fix before a reflash could safely
+re-enable HTTPS; a reflash today would still need to ship on `http://`
+unless that's diagnosed too.
 
 Current live device state (server-verified): `server.environment=TEST`,
 `expected_environment=TEST`, `mismatch=false`, `server.version=71.0.0.207`
@@ -268,10 +294,13 @@ provisioned against this hostname**, which resolved the blocker as
 2. `KIOSK-LASER-01`'s HTTPS crash (§6, Finding 1) — needs real firmware
    investigation/fix + reflash; device is left working on plain HTTP as an
    interim state. Not attempted here (out of scope for a serial remap).
-3. `KIOSK-LASER-01`'s token re-provisioning (§6, Findings 2-3) — blocked on
-   a `station_id` to bind it to (`mesflow_prodtest.stations` is empty);
-   needs the user to name/create the station, then a 2-command mechanical
-   fix (`/approve` + `kiosk-token:`).
+3. `KIOSK-LASER-01`'s token re-provisioning (§6, Finding 4) — station
+   created, device approved, fresh token minted and server-verified, but
+   it cannot be delivered: the running firmware (built 2026-08-27) predates
+   the `kiosk-token:` serial command (added 2026-08-28) entirely. Needs a
+   real firmware rebuild from current source (`0.16.0`) + physical reflash
+   — explicit sign-off needed before attempting (real device, real journal
+   data, a different risk class than a serial config change).
 
 None of these block the backend/server layer's own readiness.
 

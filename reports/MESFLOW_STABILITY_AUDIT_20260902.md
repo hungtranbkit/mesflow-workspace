@@ -317,13 +317,54 @@ against real infrastructure, never given a live workload to break).
 ~~`docs/DEPLOY_ARCHITECTURE_A.md` staleness~~ (§4) — **resolved**,
 user-confirmed, doc updated (see §4).
 
-1. **Local DEV's RBAC seed data was completely empty** (found and fixed
-   earlier today, §7c of the prior report) — root cause not fully
-   determined; isolated to local DEV only (confirmed: `mesflow.net`-host
-   and `prod.mesflow.net` both had full permission lists the whole
-   session). Worth a real look later if it recurs, but not reproducible
-   on demand right now.
-3. **`environment-preflight.sh local|production-test`**: gives a false
+~~Local DEV's RBAC seed data was completely empty~~ — **root-caused and
+fixed, user-requested follow-up**. Forensic trail (not guessed): a real
+backup taken 06:20:32 that morning, restored into an isolated throwaway
+container and counted, had the full, correct 6 roles / 40 permissions /
+102 role_permissions; by ~08:35 the live database had 0/0/0. No
+application-level audit trail exists for the change (audit_logs has zero
+role/permission entries in its entire history, ruling out the app's own
+admin UI) and Postgres statement logging was off, so the exact deleting
+actor is not provable — but the systemic gap IS fixable: unlike users
+(`seed-admin`/`seed-default-users`/`seed-super-admin`, idempotently
+re-verified on every boot), `rbac_roles`/`rbac_permissions`/
+`rbac_role_permissions` only ever got inserted the ONE time each of
+migrations 0025/0028/0029/0037/0043 first applied — Alembic never re-runs
+an already-applied migration, so this class of data loss could never
+self-heal.
+
+Fixed: `RBACRepository.seed()` (canonical seed data frozen against the
+verified-healthy 06:20:32 backup) called on every boot via a new
+`seed-rbac` CLI step, `mesflow` commit `734a175` → merged `cea2773`. A
+real design bug was caught by this fix's own new test suite before it
+shipped, not by inspection: a first draft used a flat per-row `ON
+CONFLICT DO NOTHING` on `rbac_role_permissions`, which would have
+silently *restored* any permission an admin had just removed via Users &
+Roles on the very next boot. Fixed to only seed a role's grant set when
+it currently has zero grants recorded. Three new tests
+(`tests/integration/test_rbac_self_heal.py`) cover full-wipe recovery,
+idempotency, and — the one that caught the bug — a real admin
+customization surviving a reseed. Shipped as `71.0.0.211` through the
+full pipeline (bump → build → deploy-local → real QA gate → promote) to
+all 3 environments; verified live on each: version, RBAC counts
+(6/40/102), admin login (`permissions` non-empty), and data integrity
+(`work_sessions`/`employees` counts unchanged) all checked post-deploy.
+
+Also found and fixed while promoting to `prod.mesflow.net`, not part of
+the RBAC bug itself: that target's `deploy.sh prodtest` run failed its
+scheduler-verification health gate (correctly triggering the tool's
+real automatic rollback — a positive confirmation the safety net works)
+because `/home/dell/deploy/mesflow-prodtest/scripts/{install-reconcile-cron,
+install-log-retention-cron,verify-scheduler-cron}.sh` were never
+provisioned there, and `runtime/` didn't exist for the new log paths.
+Provisioned both (copied from `mesflow/scripts/`, created the directory)
+and removed a now-redundant manual inline-Python log-retention cron
+bridge for this target (superseded now that `71.0.0.211`'s image
+includes `/app/scripts/cleanup-logs.sh` for real, per the Dockerfile fix
+from earlier this session). Re-ran `deploy.sh prodtest` clean:
+`DEPLOY PASS`, scheduler cron verified, and confirmed live afterward
+(next cron tick wrote a real, correct log line).
+1. **`environment-preflight.sh local|production-test`**: gives a false
    `FAIL` for `POSTGRES_PASSWORD`/`DATABASE_URL`/`MESFLOW_SECRET_KEY`/
    `MESFLOW_ADMIN_PASSWORD` when run as a non-privileged SSH user who
    genuinely cannot read `.env` (mode 600, different owner) — every
@@ -333,13 +374,13 @@ user-confirmed, doc updated (see §4).
    value. Not fixed: needs the script to distinguish "confirmed missing"
    from "cannot read, ask the app instead" — a real but non-trivial
    change to a shared preflight script, deferred rather than rushed.
-4. **`/opt/mesflow/runtime/tutorials/esp-kiosk` missing locally**, owned
+2. **`/opt/mesflow/runtime/tutorials/esp-kiosk` missing locally**, owned
    by `root` from an earlier root-context operation; the app's own
    `/data/tutorials` mount is read-only inside the container. Gracefully
    handled by the app (`esp_kiosk_tutorial_manifest()` returns
    `manifest:null` rather than erroring) — confirmed by reading that
    route. Not fixed: needs `sudo`, not available in this session.
-5. **`requirements.txt` pins `psycopg[binary]==3.2.9`**, no longer
+3. **`requirements.txt` pins `psycopg[binary]==3.2.9`**, no longer
    published on PyPI (only 3.2.10+ remain) — does not affect any already-
    built/deployed image (the pin was satisfied when those were built and
    is baked into the image layer), but breaks a *fresh* `pip install -r
@@ -347,7 +388,7 @@ user-confirmed, doc updated (see §4).
    venv). A version bump is a real, if small, decision (needs a rebuild
    + the same QA gate as any other change) — flagged, not silently
    changed, to stay inside "no scope creep."
-6. ~~113 GB Docker build cache / 80 GB reclaimable~~ — **done, user-
+4. ~~113 GB Docker build cache / 80 GB reclaimable~~ — **done, user-
    approved**: `docker builder prune -f` (build-cache-only, never touches
    images/containers/volumes — a different, non-destructive operation
    from the `docker system prune -a`/`volume prune` this session's
@@ -365,8 +406,21 @@ user-confirmed, doc updated (see §4).
 - `mesflow` `eae2325` → merged `7c95690`: correct production-origin doc,
   user-confirmed (§4). Pushed to `origin main`.
 - Outer workspace repo: `docker builder prune -f`, user-approved — 80.06GB
-  reclaimed, disk 53%→36% (§7 item 6), documented in commit `7d26582`.
+  reclaimed, disk 53%→36% (§7 item 4), documented in commit `7d26582`.
+- `mesflow` `734a175` → merged `cea2773`: RBAC self-heal fix, user-
+  requested (§7 item 1, now resolved). Pushed to `origin main`.
+- `mesflow` version bump `32267bb` → `71.0.0.211`, built, real QA gate
+  PASS, shipped to all 3 environments (local `deploy-local.sh`,
+  `mesflow.net`-host via `scripts/safe-recreate.sh`, `prod.mesflow.net`
+  via the now-properly-provisioned `scripts/deploy.sh prodtest` —
+  `DEPLOY PASS`, scheduler cron verified). Verified live on each: version,
+  RBAC counts, admin login, data integrity.
 
-No version bump, no rebuild, no redeploy this pass — every environment
-was already on `71.0.0.210` and stays there; both fixes in this pass are
-test/tooling-only, no application behavior changed.
+The original audit pass (§1-§6) needed no version bump — both fixes were
+test/tooling-only. The RBAC self-heal follow-up (§7 item 1) is the one
+real application-behavior change in this report, and got the full
+treatment: version bump to `71.0.0.211`, build, deploy-local, a real QA
+gate (not skipped), and promotion to both `mesflow.net`-host and
+`prod.mesflow.net` with live post-deploy verification on every
+environment (version, RBAC counts, admin login, `work_sessions`/
+`employees` row counts unchanged).

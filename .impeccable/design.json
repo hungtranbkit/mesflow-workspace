@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-08T00:00:00+07:00",
+  "title": "Design System: MESFlow",
+  "extensions": {
+    "colorMeta": {
+      "command-navy": { "role": "primary", "displayName": "Command Navy", "canonical": "#18324a", "tonalRamp": ["#071018", "#0d1d2a", "#18324a", "#24506f", "#47738f", "#7f9eb1", "#bdcdd7", "#edf2f5"] },
+      "signal-amber": { "role": "secondary", "displayName": "Signal Amber", "canonical": "#e39a22", "tonalRamp": ["#2d1c03", "#563707", "#85570e", "#b77918", "#e39a22", "#efbd68", "#f7dca8", "#fff6e5"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Workspace Headline", "purpose": "Tên màn hình và đầu mục chính." },
+      "body": { "displayName": "Operational Body", "purpose": "Dữ liệu, mô tả và nội dung bảng." }
+    },
+    "shadows": [
+      { "name": "overlay-only", "value": "0 20px 60px #0005", "purpose": "Chỉ dùng cho modal và overlay." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "180ms ease", "purpose": "Hover, collapse và phản hồi trạng thái ngắn." }
+    ],
+    "breakpoints": [
+      { "name": "workspace-compact", "value": "900px" },
+      { "name": "mobile", "value": "700px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Hành động chính trong toolbar hoặc panel.",
+      "html": "<button class=\"ds-btn-primary\">Làm mới</button>",
+      "css": ".ds-btn-primary{border:1px solid #245b82;background:#245b82;color:#fff;border-radius:5px;padding:8px 11px;font:700 13px Arial,Helvetica,sans-serif;cursor:pointer}.ds-btn-primary:hover{background:#1b4b70}.ds-btn-primary:focus-visible{outline:3px solid rgba(36,91,130,.28);outline-offset:2px}"
+    },
+    {
+      "name": "Operational Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Bề mặt nội dung phẳng, phân lớp bằng viền.",
+      "html": "<section class=\"ds-panel\"><h3>Operation cần điều phối</h3><p>Ưu tiên các trạng thái cần can thiệp.</p></section>",
+      "css": ".ds-panel{background:#fff;color:#202938;border:1px solid #d9dee7;border-radius:8px;padding:18px;font-family:Arial,Helvetica,sans-serif}.ds-panel h3{margin:0;color:#18324a;font-size:19px}.ds-panel p{margin:6px 0 0;color:#667382;font-size:13px;line-height:1.45}"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "description": "Tín hiệu trạng thái ngắn, luôn có nhãn chữ.",
+      "html": "<span class=\"ds-status-critical\">LÀM NGAY</span>",
+      "css": ".ds-status-critical{display:inline-flex;padding:5px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;font:800 10px Arial,Helvetica,sans-serif;letter-spacing:.02em}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Phòng điều hành xưởng",
+    "overview": "Chặt chẽ, điềm tĩnh và hướng sự chú ý tới trạng thái cần can thiệp. Bề mặt phẳng, viền chính xác và màu trạng thái có ngữ nghĩa.",
+    "keyCharacteristics": ["Phẳng và có cấu trúc", "Quét nhanh ở mật độ cao", "Màu phục vụ quyết định"],
+    "rules": [
+      { "name": "Operational Color", "body": "Màu trạng thái không dùng để trang trí.", "section": "colors" },
+      { "name": "Flat by Default", "body": "Panel ở trạng thái nghỉ không dùng bóng.", "section": "elevation" }
+    ],
+    "dos": ["Đặt ngoại lệ trước dữ liệu tổng hợp.", "Giữ các cột thẳng hàng để quét nhanh."],
+    "donts": ["Không dùng emoji làm tín hiệu chính.", "Không thêm hiệu ứng trang trí vào dashboard vận hành."]
+  }
+}

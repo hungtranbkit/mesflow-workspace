@@ -376,6 +376,74 @@ accidentally `git add -A`'d into `mesflow/main` as an embedded-repo
 gitlink; reverted in the next commit and `.worktrees/` added to
 `.gitignore`.
 
+## 7c. Overview page layout redesign (user-reported, `71.0.0.209`→`71.0.0.210`)
+
+Same follow-up conversation, new complaint: on `mesflow.net`, the "CHƯA
+XÁC NHẬN SỐ LIỆU / N session" box (the fix in §7b's data, displayed) looked
+unprofessional — cramped text, oddly placed. Root cause: `.overview-summary`
+is a 7-column CSS grid (6 number KPIs + 1 wide `CHỜ SỬA` slot); this item
+was appended as an 8th item with no column of its own, so it wrapped onto
+a lone second row at a single narrow `1fr` width (same as a plain number
+cell), forcing a label + big count + description into a box far too
+narrow for 3 lines, with the rest of that row sitting empty beside it.
+
+Fixed (`71.0.0.209`) by giving it a dedicated full-width row (`#ovAlerts`,
+a normal `.page-shell` grid child) styled with `.session-inbox-banner` —
+the same visual language already used for the identical "N session cần xử
+lý" concept on the Session Management page. **Caught in visual review**
+(a real Playwright screenshot against the live page, not just code
+reading): the first attempt reused that class on an `<a>` wrapper (the
+original element's own tag), which leaked the browser's default link
+styling — blue + underline — onto the title/description, since
+`.session-inbox-banner` was only ever designed for a `<div>`. Fixed
+(`71.0.0.210`) to match the reference exactly: `<div class=
+"session-inbox-banner">` with an explicit `<button id=ovGoUnconfirmed>`,
+wired up the same way Session Management's own `smGoInbox` is. Final
+result verified with a real screenshot against `mesflow.net`'s live data
+(3 sessions, same as §7b) — clean full-width banner, proper spacing, no
+link-style leak.
+
+**Also found and fixed along the way** (both local-DEV-only, needed to get
+a working screenshot at all, not shipped as source changes since they're
+data/ops, not code):
+- Local DEV's admin login started failing (`INVALID_CREDENTIALS`) despite
+  `.env` having the right value — the password hash in that instance's DB
+  had drifted from what was set earlier this session (root cause not fully
+  pinned down; possibly an earlier local recreate somewhere in this long
+  session). Fixed with `mesflow.cli reset-admin`, same as earlier in this
+  report.
+- Local DEV's `rbac_role_permissions`/`rbac_permissions` tables were
+  **completely empty** (`rbac_roles` had only the `super_admin` row from
+  migration `0043`; migration `0025`'s own idempotent seed data was
+  missing entirely, despite `migration_head` showing it applied) — admin
+  logged in with `permissions:[]`, meaning no page would have opened at
+  all. Re-ran `0025_rbac_permissions.py`'s exact idempotent seed
+  (`ON CONFLICT DO NOTHING`, sourced directly from that migration file,
+  not retyped) directly against the DB. **Not confirmed on
+  `mesflow.net`-host or `prod.mesflow.net`** — both returned full
+  permission lists throughout this session, so this looks local-DEV-only,
+  but is worth a real look later (why did a migration reported as applied
+  leave its own seed data missing?).
+
+**Real outage during the `mesflow.net`-host promotion** (self-inflicted,
+caught and fixed, no data lost): after the fix landed in `.env`,
+`docker compose up -d --force-recreate mesflow` hit the *exact same*
+container-name conflict as §7b's first promotion — reproducible, not a
+fluke. Backgrounding it via `docker exec -d` (proper Docker-level detach,
+correcting the shell-`&`-inside-`sh -c` approach from §7b, which likely
+never truly detached) still left the service **fully down** for a period
+(`mesflow-app` absent, `mesflow-postgres` stuck in `Created`) rather than
+just conflicted. Fixed by running `docker compose up -d` for the **whole
+project** (no `--force-recreate`, no single-service target) — came up
+clean on the first try. Verified: `mesflow-postgres` uses a host bind
+mount (`/opt/mesflow/runtime/postgres-v65`, not a container-scoped
+volume), and Sessions #11/#12/#13 (the exact rows behind the "3 session"
+count) were confirmed still present and `CLOSED` immediately after — no
+data was ever actually at risk, only availability, and only briefly. This
+`--force-recreate` + single-service-target combination on this specific
+host looks like a real, reproducible gotcha worth avoiding going forward
+(use the whole-project `up -d`, matching an already-pinned image, instead).
+
 ## 8. Credential hygiene
 
 Admin login unified to a single known password (`admin`/`Admin@123456`,
@@ -392,7 +460,7 @@ pattern used afterward was corrected to also catch `*_URL=` lines.
 
 | Check | Local/`dev.mesflow.net` | `mesflow.net`-host | `prod.mesflow.net` |
 |---|---|---|---|
-| App version / migration | 71.0.0.208 / 0043 | 71.0.0.208 / 0043 | 71.0.0.208 / 0043 |
+| App version / migration | 71.0.0.210 / 0043 | 71.0.0.210 / 0043 | 71.0.0.210 / 0043 |
 | Health | `ok:true` | `ok:true` | `ok:true` |
 | Login (Admin@123456) | ✅ | ✅ | ✅ (pre-existing) |
 | Backup + drill | ✅ PASS | ✅ PASS | ✅ PASS (post-migration checkpoint) |

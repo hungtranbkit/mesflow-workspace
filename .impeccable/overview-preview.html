@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MESFlow · Tổng quan sản xuất</title>
+  <link rel="stylesheet" href="/app/mesflow/web/static/ui.css">
+</head>
+<body class="admin-body">
+  <div class="app-layout">
+    <aside class="app-sidebar">
+      <div class="sidebar-brand"><div class="sidebar-logo">MF</div><div class="sidebar-brand-text"><b>MESFlow</b><small>UI preview</small></div></div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active"><span class="sidebar-item-icon">OV</span><span class="sidebar-item-label">Tổng quan sản xuất</span></button>
+        <button class="sidebar-item"><span class="sidebar-item-icon">PO</span><span class="sidebar-item-label">Production Order</span></button>
+        <button class="sidebar-item"><span class="sidebar-item-icon">TG</span><span class="sidebar-item-label">Kế hoạch sản xuất</span></button>
+        <button class="sidebar-item"><span class="sidebar-item-icon">SS</span><span class="sidebar-item-label">Session sản xuất</span></button>
+      </nav>
+      <div class="sidebar-account"><div class="sidebar-user"><b>Quản đốc</b><small>supervisor</small></div></div>
+    </aside>
+    <div class="app-workspace">
+      <header class="admin-header workspace-header"><div class="legacy-brand"><span class="legacy-kicker">MESFLOW</span><h1>Tổng quan sản xuất</h1><p>Theo dõi PO hiện tại và ưu tiên Operation cần xử lý</p></div><div class="legacy-user compact-user"><div class="db-state"><i></i> PostgreSQL</div></div></header>
+      <main class="admin-page workspace-main"><section id="content">
+        <section class="panel overview-hero pc-hero">
+          <div class="overview-intro"><h2>Tình trạng PO và Operation</h2><p>Ưu tiên Operation cần can thiệp, sau đó đối chiếu tiến độ Production Order.</p></div>
+          <div class="panel-actions pc-actions"><input placeholder="Tìm PO, Part, Operation..."><select><option>Tất cả PO</option></select><select><option>Tất cả mức ưu tiên</option></select><select><option>Ưu tiên cao nhất</option></select><button class="btn primary">Làm mới</button></div>
+        </section>
+        <section class="daily-kpis pc-kpis">
+          <article class="daily-kpi pc-kpi neutral"><small>PO đang theo dõi</small><strong>12</strong></article><article class="daily-kpi pc-kpi critical"><small>OP làm ngay</small><strong>3</strong></article><article class="daily-kpi pc-kpi warning"><small>Cần chú ý</small><strong>7</strong></article><article class="daily-kpi pc-kpi waiting"><small>Chờ đầu vào</small><strong>4</strong></article><article class="daily-kpi pc-kpi active"><small>Session đang chạy</small><strong>9</strong></article>
+        </section>
+        <div class="overview-sections">
+          <section class="panel overview-operations"><div class="panel-head"><div><h2>Operation cần điều phối</h2><p>Đọc từ trái sang phải: tình trạng, tiến độ, đầu vào, nguồn lực và quyết định.</p></div><span class="ct-live-dot">LIVE</span></div>
+            <div class="pc-op-table"><div class="pc-op-head"><span>Operation</span><span>Tiến độ sản phẩm</span><span>WIP đầu vào</span><span>Nguồn lực</span><span>Quyết định</span></div>
+              <article class="pc-op-row critical"><div class="pc-op-main"><span class="pc-priority">LÀM NGAY · điểm 96</span><b>OP-030 · Phay tinh</b><small>PO-24081 · P-108 Trục dẫn động</small></div><div><b>38.5%</b><div class="pc-progress critical"><i style="width:38.5%"></i></div><small>Đạt 385 / 1.000 · còn 615</small><small class="danger-text">Chậm khoảng 24% theo thời gian PO</small></div><div><b>42 SP</b><small>Từ OP trước</small></div><div><b>0 session</b><small>Chưa có người làm</small><small>Hạn PO 10/08/2026</small></div><div class="pc-decision"><em class="pc-state critical">LÀM NGAY</em><b>Bổ sung nhân lực và ưu tiên máy</b><ul><li>Tiến độ thấp hơn kế hoạch</li><li>Chưa có session đang chạy</li></ul><div><button class="btn mini">Mở PO</button><button class="btn mini">Dòng vật tư</button></div></div></article>
+              <article class="pc-op-row warning"><div class="pc-op-main"><span class="pc-priority">CẦN CHÚ Ý · điểm 72</span><b>OP-020 · Tiện CNC</b><small>PO-24079 · P-095 Bạc lót</small></div><div><b>64.0%</b><div class="pc-progress warning"><i style="width:64%"></i></div><small>Đạt 640 / 1.000 · còn 360</small></div><div><b>118 SP</b><small>Material Flow Ledger</small></div><div><b>1 session</b><small>Đang có người thực hiện</small><small>Hạn PO 12/08/2026</small></div><div class="pc-decision"><em class="pc-state warning">CẦN CHÚ Ý</em><b>Theo dõi sản lượng cuối ca</b><ul><li>WIP đang tích lũy</li></ul><div><button class="btn mini">Mở PO</button></div></div></article>
+            </div>
+          </section>
+          <section class="panel overview-orders"><div class="panel-head"><div><h2>Production Order</h2><p>Chọn một PO để thu hẹp danh sách Operation phía trên.</p></div><button class="btn">Hiện tất cả PO</button></div><div class="daily-op-table"><div class="daily-op-row head"><span>Production Order</span><span>Điều hành</span><span>Tiến độ</span><span>Kế hoạch</span></div><div class="daily-op-row"><span><b>PO-24081 · Trục dẫn động</b><small>3 Part · 12 OP</small></span><span><em class="pc-state critical">LÀM NGAY</em><small>WIP 160 · hạn 10/08/2026</small></span><span><b>43.2%</b><div class="pc-progress critical"><i style="width:43.2%"></i></div><small>Đạt 432 · Lỗi 8 · Sửa được 3</small></span><span><b>1.000 SP</b><small>4/12 OP hoàn thành</small></span></div></div></section>
+        </div>
+      </section></main>
+    </div>
+  </div>
+</body>
+</html>

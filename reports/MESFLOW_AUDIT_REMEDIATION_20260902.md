@@ -160,11 +160,83 @@ is in place on all 3 hosts so the job runs correctly today regardless.
   session.
 - `Q:N` (offline event backlog counter, `pending + in_flight`) — confirmed
   by code, left as-is; no evidence of a real replay bug found or fixed.
-- **No real ESP32 hardware was online at any point this session**
-  (furthest device record: 10+ days stale, internal-looking IP,
-  firmware version matching V1/`esp-kiosk` not V2) — the full physical
-  scan→start→finish flow and `Q:N`'s actual on-device behavior remain
-  **HARDWARE_VERIFICATION_PENDING**. Not claimed PASS.
+- **A real ESP32-S3 device (`KIOSK-LASER-01`, `esp32s3-4C64CEF61B44`) was
+  connected via USB serial (`/dev/ttyACM0`) later in this session** and its
+  backend remapped live — see the dedicated subsection below. The full
+  physical scan→start→finish flow is still not exercised (no station bound
+  yet — see finding 3 below), so that part remains
+  **HARDWARE_VERIFICATION_PENDING**; everything else below is real,
+  live-verified evidence, not PASS-by-assumption.
+
+### `KIOSK-LASER-01` backend remap (real device, live, 2026-09-02)
+
+Read-only pre-check (per the standing "cross-check identity + pending
+journal before changing anything" rule): device registered ACTIVE only in
+`mesflow_prodtest` (`kiosk_identities.id=2`), `last_seen_at` ~1 week stale;
+NVS config had `expected_environment=DEV` but a real, non-trivial pending
+offline journal (18 records: 8 pending, 5 rejected, 1 human_review, 95.82%
+capacity/RESTRICTED). `debug-net-diag` proved both `dev.mesflow.net` and
+`prod.mesflow.net` fully reachable (DNS+TCP+HTTP 200) from the device's
+real network position, yet live traffic reported `TCP_CONNECT_FAIL` — the
+configured `api_endpoint` was neither host (exact stored value unrecoverable
+read-only; the firmware deliberately never echoes it over serial, only to
+the physical screen). Since the device's own DB identity lives only in
+`mesflow_prodtest`, that (not DEV) was the evidence-backed remap target.
+
+**Finding 1 (P0, new, firmware): HTTPS bootstrap crashes the device.**
+Setting `api-endpoint:https://prod.mesflow.net/api/kiosk/v2/events` was
+accepted and applied, but every subsequent boot panicked
+(`Guru Meditation Error: Core 1 panic'ed (Double exception)`) at the
+`BEFORE_TLS_REQUEST` stage — a genuine crash-loop, reproduced identically
+on 3 consecutive boots. This is new: the device could never previously
+reach a real TCP connection at all (always `TCP_CONNECT_FAIL`), so this
+BearSSL/TLS-path bug was never triggered before. Mitigated live by racing
+a corrected `api-endpoint:http://...` (plain HTTP; `BACKEND_URL_ALLOW_HTTP`
+is already `1`) into the ~1-3s serial window before each crash — landed on
+the 2nd attempt, confirmed stable (no crash) afterward. **Not fixed at the
+firmware level** — this needs real investigation (likely a
+BearSSL/WiFiClientSecure stack-size issue) and a new firmware build before
+HTTPS can be used again; the device is left on HTTP as a working interim
+state (X-Kiosk-Token now travels in cleartext until that's fixed).
+
+With the endpoint corrected, `expected-env:TEST` was set to match
+`prod.mesflow.net`'s real server_role (`PRODUCTION_TEST` → `TEST`), clearing
+`SERVER_ENV_MISMATCH` (was `expected=DEV actual=TEST`). Verified the guard
+behaved correctly *during* the mismatch window: `OFFLINE_REPLAY_START` (a
+local queue-staging log line) fired, but `check_offline_replay()`'s actual
+network send is separately gated on `!env_mismatch_` (`kiosk_runtime.cpp`)
+and never fired — confirmed by code and by the absence of any
+`OFFLINE_REPLAY_SEND` log line before the mismatch cleared. No cross-
+environment replay occurred.
+
+**Finding 2 (documented pre-existing gap, not new): all 8 replayed events
+got HTTP 401 and were auto-marked `HUMAN_REVIEW`.** Root cause identified
+via `docs/PROTOCOL.md`'s own "Compatibility note": this device reached
+ACTIVE *before* the 2026-08-28 `X-Kiosk-Token` P0 auth fix, so it has a
+real `token_hash` server-side (`kiosk_identities.id=2`, confirmed via
+read-only query) but was never handed the matching plaintext — by design,
+every `/events` call 401s until an admin re-approves/rebinds it. Journal
+after: `pending=0, human_review=7, rejected=5, acked=4, conflicts=1`
+(one of the 8 replay attempts resolved differently — not fully
+disambiguated), `usage_pct` dropped 95.82%→5.84% (compaction ran normally
+on the now-terminal records). **No data was lost** — journal recovery
+(`recovered=1362, crc_fail=0`) was clean and identical across every reboot
+of this session.
+
+**Finding 3 (blocks full remediation): re-approving the device requires a
+`station_id`, and `mesflow_prodtest`'s `stations` table is currently
+empty.** `POST /api/kiosk-identities/2/approve` (admin/manager-session,
+mints a fresh plaintext token) requires a real `station_id` in its body —
+this is a business/setup decision (which physical station this kiosk
+belongs to), not something to infer from evidence, so **not attempted**.
+Once a station exists and the user names it, the remaining fix is
+mechanical: call `/approve`, then `kiosk-token:<token>` over serial (no
+reboot needed) — no further hardware risk.
+
+Current live device state (server-verified): `server.environment=TEST`,
+`expected_environment=TEST`, `mismatch=false`, `server.version=71.0.0.207`
+(matches this session's promoted build), bootstrap/heartbeat/UI-bundle-sync
+all OK, journal pressure `NORMAL`.
 
 ### `kiosk-v2-local-test.mesflow.net` (the original 502) — fully resolved, by removal
 
@@ -193,10 +265,15 @@ provisioned against this hostname**, which resolved the blocker as
 1. `predictive_metrics_collection` (§4) — needs a human decision (revive
    the legacy path, or leave it to Deploy Agent as currently intended);
    not attempted without that decision.
-2. ESP32 hardware verification (§6) — needs a real device; nothing more
-   to fix server-side without one.
+2. `KIOSK-LASER-01`'s HTTPS crash (§6, Finding 1) — needs real firmware
+   investigation/fix + reflash; device is left working on plain HTTP as an
+   interim state. Not attempted here (out of scope for a serial remap).
+3. `KIOSK-LASER-01`'s token re-provisioning (§6, Findings 2-3) — blocked on
+   a `station_id` to bind it to (`mesflow_prodtest.stations` is empty);
+   needs the user to name/create the station, then a 2-command mechanical
+   fix (`/approve` + `kiosk-token:`).
 
-Neither blocks the backend/server layer's own readiness.
+None of these block the backend/server layer's own readiness.
 
 ## 8. Credential hygiene
 

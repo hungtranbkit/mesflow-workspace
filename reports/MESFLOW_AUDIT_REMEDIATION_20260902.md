@@ -328,6 +328,54 @@ provisioned against this hostname**, which resolved the blocker as
 
 None of these block the backend/server layer's own readiness.
 
+## 7b. Session inbox banner miscount (user-reported live, fixed) — `71.0.0.208`
+
+User flagged 3 screenshots from `mesflow.net`: Overview said "3 session"
+unconfirmed, Exception Center's "Cần xử lý" tab listed exactly 3 (Sessions
+#11/#12/#13, all `ZERO_QUANTITY_LONG`), but Session Management's own inbox
+banner said **"6 session"** for what looked like the same thing.
+
+Root cause: `GET /api/session-exceptions?view=inbox` is a `UNION ALL` over
+independently-detected rules — these 3 Sessions each match **two** rules at
+once (`AUTO_CLOSED_UNCONFIRMED` + `ZERO_QTY_LONG`, both legitimately true:
+auto-closed by the shift job *and* closed with zero quantity), so the API
+correctly returns 6 rows. The banner's client-side code
+(`app.js`) did `(d.items||[]).length` — counting rows, not Sessions. Fixed
+to `new Set(items.map(x=>x.session_id)).size` (fixed via a dedicated
+worktree/branch, `agent/claude/session-inbox-count`, merged to main).
+Verified live against `mesflow.net`-host's real data (6 rows / 3 distinct
+`session_id`s) before and after.
+
+**Shipped as `71.0.0.208`** through the same build-once/promote pipeline:
+`bump-version.sh` → `build-release.sh` → `deploy-local.sh` (DEV) →
+`release-local-qa.sh` (84 Python/Playwright tests + smoke, real evidence,
+isolated sandbox) → evidence submitted to the local Agent's gate API →
+promoted to both PRODUCTION_TEST targets with the *same* image digest
+(`sha256:c637070c...`):
+- `mesflow.net`-host: `scripts/promote-test.sh` against
+  `deploy.mesflow.net` hit a session/CSRF redirect bug in that path (not
+  investigated further — this exact target was already deprioritized
+  earlier in this session); fell back to the already-proven
+  `docker save | ssh | docker load` + `.env` pin + `docker compose up
+  --force-recreate` method. One self-inflicted hiccup: a client-side
+  `timeout` killed the first recreate attempt mid-flight, briefly leaving
+  `mesflow-app` down entirely (no container at all) with a stale name
+  conflict; caught immediately, cleaned up, and re-run to completion via a
+  background job instead of a hard timeout — verified `healthy` and back
+  within ~30s. No data involved (stateless app container; `postgres` was
+  untouched).
+- `prod.mesflow.net`: local registry push (`127.0.0.1:5000`, same digest)
+  + `.env` pin + recreate. Also recreated `mesflow-prodtest-db`
+  unexpectedly (compose detected some other config drift, not requested) —
+  checked immediately: named volume (`mesflow-prodtest-pgdata`), data
+  confirmed intact after (`work_sessions=19, employees=26`, unchanged).
+
+Also fixed in passing (source-tracked, unrelated to the bug itself): a
+stray `.worktrees/artifact-metadata-contract` sibling worktree got
+accidentally `git add -A`'d into `mesflow/main` as an embedded-repo
+gitlink; reverted in the next commit and `.worktrees/` added to
+`.gitignore`.
+
 ## 8. Credential hygiene
 
 Admin login unified to a single known password (`admin`/`Admin@123456`,
@@ -344,7 +392,7 @@ pattern used afterward was corrected to also catch `*_URL=` lines.
 
 | Check | Local/`dev.mesflow.net` | `mesflow.net`-host | `prod.mesflow.net` |
 |---|---|---|---|
-| App version / migration | 71.0.0.207 / 0043 | 71.0.0.207 / 0043 | 71.0.0.207 / 0043 |
+| App version / migration | 71.0.0.208 / 0043 | 71.0.0.208 / 0043 | 71.0.0.208 / 0043 |
 | Health | `ok:true` | `ok:true` | `ok:true` |
 | Login (Admin@123456) | ✅ | ✅ | ✅ (pre-existing) |
 | Backup + drill | ✅ PASS | ✅ PASS | ✅ PASS (post-migration checkpoint) |

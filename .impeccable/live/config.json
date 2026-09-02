@@ -1,6 +1,0 @@
-{
-  "files": ["app/mesflow/web/templates/app.html"],
-  "insertBefore": "</body>",
-  "commentSyntax": "html",
-  "cspChecked": true
-}

@@ -12,6 +12,8 @@
 /qa-center/
 /mesflow-web/
 /esp-kiosk/
+/deploy-agent-v2/
+/mesflow-kiosk-runtime-v2/
 
 # Generated release artifacts / build output -- never source.
 /artifacts/
@@ -20,9 +22,23 @@
 # Reconcile/runtime scratch dumps -- regenerated on demand, not source.
 /.reconcile/
 /tmp/
+/runtime/
+/runtime-projectflow-local/
 
 # Local dev-tool state, not part of the project.
 .aider*
 .pytest_cache/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+.agents/
+.codex/
+.impeccable/
+.bump-version.lock
+.worktrees/
+
+# Byte-compiled / build cache -- never source.
+__pycache__/
+*.pyc
+
+# Generated test output -- regenerated on every run, not source.
+/test-results/

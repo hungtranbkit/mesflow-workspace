@@ -228,18 +228,20 @@ session's own earlier tunnel work) has since made `/opt/mesflow` on this
 host the real target for public `mesflow.net`. That is a **real change
 in production identity** that a week-old safety doc doesn't reflect yet.
 
-**Deliberately not touched**: `deploy_lib.sh`'s `production` target logic
-is exactly the kind of code that must never be loosened without explicit
-human sign-off — it exists specifically to prevent a repeat of a real
-past incident, and "the assumption era now looks outdated" is not the
-same bar as "confirmed safe to change." Flagging for a human decision:
-either update `docs/DEPLOY_ARCHITECTURE_A.md`'s investigation section
-with a dated follow-up (evidence: this session's logs) confirming
-`mesflow.net` → `/opt/mesflow`, or — if there's a reason to doubt that —
-investigate further before anyone relies on it. This is the single
-highest-leverage finding in this audit: it's the difference between
-"prodtest" and "production" in every future automated deploy/rollback
-decision.
+**Resolved, 2026-09-02, user-confirmed**: user explicitly confirmed
+`mesflow.net` → `/opt/mesflow` is now correct ("xác nhận đúng, cập nhật
+doc luôn đi"). Updated `docs/DEPLOY_ARCHITECTURE_A.md` with a dated
+follow-up section (commit `eae2325` → merged `7c95690`, `mesflow` main) —
+kept the original 2026-08-25 investigation intact as historical record,
+added the new evidence and the resolution rather than rewriting it.
+
+**Still deliberately not touched**: `deploy_lib.sh`'s `production` target
+refusal logic itself. Confirming *where* `mesflow.net` routes is a
+different question from deciding `/opt/mesflow` should now be treated as
+the final, human-approval-gated real-Production target that safety guard
+exists for — the user's own framing keeps calling this tier "prod test"
+day to day. That would be a separate, explicit decision, not an inference
+from this doc correction, and wasn't asked for.
 
 ## 5. Code audit — targeted, evidence-based (not exhaustive)
 
@@ -312,9 +314,10 @@ against real infrastructure, never given a live workload to break).
 
 ## 7. Remaining P2 items (not fixed — each with a clear reason)
 
-1. **`docs/DEPLOY_ARCHITECTURE_A.md` staleness** (§4) — needs a human
-   decision on production identity, not a code fix.
-2. **Local DEV's RBAC seed data was completely empty** (found and fixed
+~~`docs/DEPLOY_ARCHITECTURE_A.md` staleness~~ (§4) — **resolved**,
+user-confirmed, doc updated (see §4).
+
+1. **Local DEV's RBAC seed data was completely empty** (found and fixed
    earlier today, §7c of the prior report) — root cause not fully
    determined; isolated to local DEV only (confirmed: `mesflow.net`-host
    and `prod.mesflow.net` both had full permission lists the whole
@@ -359,6 +362,10 @@ against real infrastructure, never given a live workload to break).
   test staleness (§2). Pushed to `origin main`.
 - `mesflow` `a084bc9` → merged `a62dc36`: `scripts/safe-recreate.sh`
   (§1). Pushed to `origin main`.
+- `mesflow` `eae2325` → merged `7c95690`: correct production-origin doc,
+  user-confirmed (§4). Pushed to `origin main`.
+- Outer workspace repo: `docker builder prune -f`, user-approved — 80.06GB
+  reclaimed, disk 53%→36% (§7 item 6), documented in commit `7d26582`.
 
 No version bump, no rebuild, no redeploy this pass — every environment
 was already on `71.0.0.210` and stays there; both fixes in this pass are

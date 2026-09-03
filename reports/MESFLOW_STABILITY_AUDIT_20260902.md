@@ -364,16 +364,23 @@ includes `/app/scripts/cleanup-logs.sh` for real, per the Dockerfile fix
 from earlier this session). Re-ran `deploy.sh prodtest` clean:
 `DEPLOY PASS`, scheduler cron verified, and confirmed live afterward
 (next cron tick wrote a real, correct log line).
-1. **`environment-preflight.sh local|production-test`**: gives a false
-   `FAIL` for `POSTGRES_PASSWORD`/`DATABASE_URL`/`MESFLOW_SECRET_KEY`/
-   `MESFLOW_ADMIN_PASSWORD` when run as a non-privileged SSH user who
-   genuinely cannot read `.env` (mode 600, different owner) — every
-   downstream check that actually *exercises* those values (agent
-   connectivity, secret-key-configured, QA env keys) passes, so this is
-   a false positive from a permission-model mismatch, not a real missing
-   value. Not fixed: needs the script to distinguish "confirmed missing"
-   from "cannot read, ask the app instead" — a real but non-trivial
-   change to a shared preflight script, deferred rather than rushed.
+~~`environment-preflight.sh local|production-test` false-FAIL~~ —
+**fixed, user-requested**. Root cause: `[[ -f "$envfile" ]]` only needs
+the parent directory searchable, not the file itself readable — a
+mode-600 `.env` owned by a different user (the normal, correct state on
+a real target reached as a non-privileged SSH user) passed that check,
+but the subsequent read silently returned nothing
+(`2>/dev/null` swallowing `Permission denied`), so every required key
+reported `FAIL` even though genuinely configured. Fixed to check
+readability explicitly; when unreadable, verify via `mesflow-app`'s own
+resolved container environment instead (`docker inspect` — real evidence,
+docker compose already resolved these from the same `.env` at
+container-create time via `env_file:`) rather than reporting a file this
+user was never meant to read directly as "missing". `scripts/
+environment-preflight.sh`, outer workspace repo commit `49e650f`.
+Verified live both ways: local (readable, still passes via direct file
+read) and `mesflow.net`-host (`.env` genuinely unreadable to the `codex`
+SSH user — was `FAIL=4`, now a clean `SUMMARY PASS=33 WARN=0 FAIL=0`).
 2. **`/opt/mesflow/runtime/tutorials/esp-kiosk` missing locally**, owned
    by `root` from an earlier root-context operation; the app's own
    `/data/tutorials` mount is read-only inside the container. Gracefully

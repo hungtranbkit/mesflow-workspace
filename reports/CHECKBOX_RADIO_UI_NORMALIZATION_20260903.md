@@ -286,3 +286,91 @@ continue searching without a concrete lead, per the task's own
 - `f7ee593` — `fix(ui): modal-backdrop z-index below sidebar, real content clipping`
 - `5d0f4af` — `chore: bump version to 71.0.0.214 for modal-backdrop z-index fix`
 - Merged to `main` (fast-forward, `6466cfd..5d0f4af`), pushed to `origin/main`.
+
+---
+
+## Part 3 — 2026-09-03, Dashboard + remaining-screens sweep, plus one user-requested field change
+
+### Audit sweep
+
+Swept every remaining page not yet individually checked: Dashboard theo
+ngày, Production Trace, Nhật ký nghiệp vụ (business audit trail), Trạm
+kiosk, Nhật ký ứng dụng (system logs), Báo cáo năng suất nhân viên, In
+tem QR, Ca làm việc (working calendar), Production Schedule (Gantt &
+Material Flow), Hướng dẫn (tutorials), and all 6 `super_admin`-only
+System Console pages (Tổng quan hệ thống, Lỗi hệ thống, Nhật ký, Dịch vụ,
+Chẩn đoán, Nhật ký quản trị) — desktop + mobile where applicable, using
+both the `admin` and `superadmin` accounts (the System Console pages
+correctly return "Không có quyền truy cập" for a plain `admin`, since
+they're gated to `super_admin` — confirmed this is intentional RBAC, not
+a bug, by re-testing with `superadmin`).
+
+No further checkbox/radio, input-height, button-sizing, table-layout,
+badge/banner-spacing, modal-overflow, or icon-scaling defects found.
+Every one of these screens already matches the design system's existing
+"UI Template Standard" conventions.
+
+One minor, cosmetic-only observation, not fixed (below the bar for a
+stability-first low-risk fix — touches the shared `openPage()` early-
+return path used by every page, higher blast radius than its value):
+navigating to a page you lack permission for leaves the previous page's
+header title/subtitle in place instead of resetting it, since the
+access-denied branch in `openPage()` returns before any page's own
+render function (which is what normally sets the header text) runs. Only
+visible to a user who already can't do anything on that screen anyway.
+
+### User-requested field change (not a stability-audit finding)
+
+Mid-audit, the user asked what "NG tiêu hao đầu vào" means, then asked to
+hide it since the behavior is implicitly always expected — no need to
+expose it as a toggle. This field (`defects_consume_input`) appeared as a
+checkbox in two places, both removed:
+
+- `poOperationModal` (PO's "Sửa/Thêm Operation" form) — "Sản phẩm lỗi
+  cũng tiêu hao đầu vào" checkbox removed; its submit payload now
+  hardcodes `defects_consume_input:true` instead of reading a checkbox
+  that no longer exists.
+- `oldOperationRow` (Template old-editor's per-operation row) — "NG tiêu
+  hao đầu vào" checkbox removed; the now-dead `data-consume-defects`
+  query and its `onchange` handler removed from `bindOldEditorEvents`
+  (would otherwise throw on a null element). New operations added via
+  "+ Thêm Operation" already defaulted to `true` and are unchanged.
+
+Both read-only *displays* of this field (material-flow.js's relation
+card, and the PO detail page's flow-card in app.js) were left as-is —
+they show actual historical state, not a setting, so still correct.
+Existing template/operation data that already has `defects_consume_input:
+false` stored is left untouched by the Template editor path (no bulk
+data migration was asked for); it can just no longer be edited back to
+`false` through either screen.
+
+Side effect: `.template-flow-row` now renders exactly 3 items against
+its 3 explicit grid columns (was 4 items sharing 3 columns, with the 4th
+wrapping to its own row) — incidentally resolves the earlier-noted grid/
+column mismatch from the checkbox-sizing investigation in part 1, as a
+bonus of removing the 4th item rather than a deliberate layout fix.
+
+Verified live: checkbox absent from both forms on local DEV and
+`mesflow.net` after promotion, no console errors, sibling controls
+("Giới hạn đầu vào" OP-nguồn select enable/disable) still work, Template
+save still works. Backend/API untouched — pure frontend-form change.
+
+### Deploy
+
+- **local DEV** — `71.0.0.215`, healthy.
+- **`mesflow.net`-host** — `71.0.0.215`, healthy, live-verified (checkbox
+  confirmed absent from the real Template editor).
+- **`prod.mesflow.net:8299`** — `71.0.0.215` via `scripts/deploy.sh
+  prodtest 71.0.0.215` — `== DEPLOY PASS ==`, digest verified,
+  `migration_changed: 0`.
+
+All three environments' `app.js` hash-match exactly
+(`c4e646c3a58e611b9238ec194b78da62`). Full pytest regression suite + 88
+Playwright e2e specs in the isolated QA sandbox: `QA_STATUS=PASS`,
+`FAILED_STEP=none`, 7/7 checks green.
+
+### Commits (part 3)
+
+- `41c88a7` — `feat(operations): remove 'NG tiêu hao đầu vào' toggle, always true now`
+- `4bde9f5` — `chore: bump version to 71.0.0.215 for NG-consume-input toggle removal`
+- Merged to `main` (fast-forward, `5d0f4af..4bde9f5`), pushed to `origin/main`.

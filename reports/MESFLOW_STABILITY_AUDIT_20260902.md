@@ -1,9 +1,11 @@
 # MESFlow Stability Audit — Build/Test/Deploy/Rollback + Code — 2026-09-02
 
-STATUS: **READY_WITH_LIMITS**. All P0/P1 found were fixed and re-verified
-with real evidence (not inferred). No P0/P1 remains open. A short list of
-P2 items remains — none block deploy/test/rollback correctness; each is
-noted with why it wasn't touched.
+STATUS: **READY** (updated 2026-09-03). Every P0/P1/P2 this audit found
+was fixed and re-verified with real evidence (not inferred) — the RBAC
+self-heal fix additionally required and got a full version bump + real
+QA gate + promotion to all 3 environments (§7 item 1); everything else
+was source/tooling/infra-only, verified in place. Nothing remains open
+from this audit.
 
 Scope, per the user's explicit brief: build/test/deploy/promote/rollback
 across local/test/prod; root-cause and eliminate the container-name
@@ -381,20 +383,32 @@ environment-preflight.sh`, outer workspace repo commit `49e650f`.
 Verified live both ways: local (readable, still passes via direct file
 read) and `mesflow.net`-host (`.env` genuinely unreadable to the `codex`
 SSH user — was `FAIL=4`, now a clean `SUMMARY PASS=33 WARN=0 FAIL=0`).
-2. **`/opt/mesflow/runtime/tutorials/esp-kiosk` missing locally**, owned
-   by `root` from an earlier root-context operation; the app's own
-   `/data/tutorials` mount is read-only inside the container. Gracefully
-   handled by the app (`esp_kiosk_tutorial_manifest()` returns
-   `manifest:null` rather than erroring) — confirmed by reading that
-   route. Not fixed: needs `sudo`, not available in this session.
-3. **`requirements.txt` pins `psycopg[binary]==3.2.9`**, no longer
-   published on PyPI (only 3.2.10+ remain) — does not affect any already-
-   built/deployed image (the pin was satisfied when those were built and
-   is baked into the image layer), but breaks a *fresh* `pip install -r
-   requirements.txt` today (hit while setting up this audit's own test
-   venv). A version bump is a real, if small, decision (needs a rebuild
-   + the same QA gate as any other change) — flagged, not silently
-   changed, to stay inside "no scope creep."
+~~`/opt/mesflow/runtime/tutorials/esp-kiosk` missing locally~~ — **fixed,
+user-requested**. Directory was owned by `root` (from an earlier
+root-context operation) and this session's user has no `sudo`; created
+via a one-off throwaway `docker run --rm -v .../tutorials:/t alpine
+mkdir -p /t/esp-kiosk` (root inside the container, matching the
+established `-u root` pattern already used elsewhere this session for
+legitimate fixes — an empty, purely-additive `mkdir`, no data read or
+touched). `environment-preflight.sh local` confirmed clean afterward:
+`FAIL=0` (was `FAIL=1`). Directory is empty (no tutorial content
+fabricated) — the app already handles that gracefully
+(`esp_kiosk_tutorial_manifest()` returns `manifest:null`); this only
+satisfies the directory-existence check, not the tutorial feature
+itself.
+
+~~`requirements.txt` pins `psycopg[binary]==3.2.9`~~ — **fixed,
+user-requested**. Bumped to `3.2.13` (latest patch within the same 3.2.x
+minor line, not the newer 3.3.x, to minimize behavior-change risk from a
+routine availability fix). Verified with a real, full `docker-test.sh`
+run before shipping, not assumed safe: 824 pytest tests passed (0
+failed, same documented skips as before), full Playwright e2e suite
+passed (83 passed, 1 flaky-but-passed-on-retry unrelated to this
+change, 4 skipped). `mesflow` commit `761f794` → merged `ae88a3d`.
+Source-only — does not affect any already-built/deployed image (their
+pin was already satisfied at build time); the next real release build
+will pick it up automatically, no separate redeploy needed for this by
+itself.
 4. ~~113 GB Docker build cache / 80 GB reclaimable~~ — **done, user-
    approved**: `docker builder prune -f` (build-cache-only, never touches
    images/containers/volumes — a different, non-destructive operation

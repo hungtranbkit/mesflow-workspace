@@ -445,3 +445,60 @@ gate (not skipped), and promotion to both `mesflow.net`-host and
 `prod.mesflow.net` with live post-deploy verification on every
 environment (version, RBAC counts, admin login, `work_sessions`/
 `employees` row counts unchanged).
+
+## 9. Final 3-environment check (2026-09-03) — 2 more real incidents found and fixed live
+
+A user-requested final pass across all 3 environments (version/health/
+RBAC/data/scheduler/disk) found one more real, if purely cosmetic,
+discrepancy: `server_role` (a human-facing label the code's own comment
+explicitly documents as "distinct from `environment`/MESFLOW_ENV, which
+code gates key off of... never infer one from the other" — confirmed
+functionally inert, not a security/behavior bug) read `PRODUCTION` on
+local DEV and was unset (`null`) on `mesflow.net`-host, while
+`prod.mesflow.net` correctly read `PRODUCTION_TEST`. User approved
+correcting both.
+
+**Fixing this triggered two more real incidents, both caused live by this
+session and both fixed live**, not deploy.sh/safe-recreate.sh's fault in
+the first case:
+
+1. **Local DEV**: after setting `SERVER_ROLE=DEV` and running a plain
+   `docker compose up -d --no-deps mesflow` (no `safe-recreate.sh`, no
+   explicit image pin on the command line), the app **downgraded to
+   `71.0.0.207`**. Root cause: `/opt/mesflow/.env`'s `MESFLOW_IMAGE` had
+   been stale at `71.0.0.207` this entire session — `deploy-local.sh`'s
+   own flow never writes that file, so it silently held a value from
+   before any of this session's version bumps, invisible until a plain
+   `compose up` (no override) finally read it directly. The exact
+   "explicit-pin-or-it-silently-downgrades" class of bug from earlier
+   this session, this time self-inflicted by skipping that discipline for
+   a "just a label change" recreate. Fixed immediately: updated
+   `MESFLOW_IMAGE=mesflow-app:71.0.0.211` in `.env`, recreated again
+   (`--no-deps`, postgres never touched — confirmed via its unchanged
+   `StartedAt`), verified healthy on `71.0.0.211` with `server_role=DEV`,
+   RBAC (6/40/102) and admin login unaffected by the brief window.
+
+2. **`mesflow.net`-host**: using `safe-recreate.sh` (§1) for the same
+   `SERVER_ROLE=PRODUCTION_TEST` change, `docker rm -f` on a stray
+   container from an earlier interrupted attempt returned success, but
+   the following `docker compose up -d --no-deps` still hit "removal of
+   container ... is already in progress" and **tore down the real,
+   healthy `mesflow-app` without completing its recreation — a genuine
+   outage**, not merely a conflict. `mesflow-postgres` was confirmed
+   never touched (`--no-deps` held). Root-caused immediately: `rm -f`
+   returning 0 does not mean Docker's async removal is actually visible
+   to the very next call. Fixed `safe-recreate.sh` itself
+   (`mesflow` commit `0d3c605` → merged `2d95b7c`) to poll `docker
+   inspect` until a removed container is genuinely gone (up to ~20s)
+   before proceeding, at both removal sites. Recovered live (clean
+   container list, then one full recreate) and re-verified the hardened
+   script is a correct no-op against the now-healthy target.
+
+**Final state, all 3 environments, re-verified after both fixes**:
+version `71.0.0.211` everywhere; `server_role` now `DEV` / `PRODUCTION_TEST`
+/ `PRODUCTION_TEST` respectively (accurate); RBAC `6/40/102` on all 3;
+admin login working with a real permission set on all 3; `work_sessions`/
+`employees` row counts unchanged on both real-data environments
+(`mesflow.net`-host and `prod.mesflow.net`); containers healthy, no
+restart churn; scheduler cron producing clean, current 0-candidate cycles
+on both `mesflow.net`-host and `prod.mesflow.net`; disk healthy (40%/56%).

@@ -177,8 +177,112 @@ flagged for a follow-up task.
   for a purely preventive, low-probability-of-recurrence benefit, which
   is scope creep on a stability-first task.
 
-## Commits
+## Commits (part 1)
 
 - `60e8605` — `fix(ui): canonical checkbox/radio sizing, shared layer not page hacks`
 - `6466cfd` — `chore: bump version to 71.0.0.213 for checkbox/radio UI fix`
 - Merged to `main` (fast-forward, `3af5a92..6466cfd`), pushed to `origin/main`.
+
+---
+
+## Part 2 — 2026-09-03, requirement 3 follow-up ("audit the rest")
+
+Continued the same audit across the rest of the main UI (Dashboard,
+Session Management, Exception Center, PO/Part/Operation CRUD, employee/
+admin, key modals), desktop + mobile, per the original task's requirement
+3. Found one new, more severe bug of the same "shared-layer value not
+updated everywhere" shape, and fixed it and its siblings.
+
+### Root cause
+
+`.app-sidebar` sits at `z-index:80` (raised there deliberately at some
+earlier point). The generic `.modal-backdrop` class — used by *every*
+simple modal built via `box.className='modal-backdrop'` in `app.js`
+(employee, equipment, user, PO, template, operation, Excel-import,
+reset-password...) — was still at `z-index:40`, from before the sidebar's
+z-index was raised. Any modal wide enough that its centered position
+reaches under the sidebar's width gets the sidebar visually painted over
+its left portion, since the sidebar wins the stacking order.
+
+Confirmed live via Playwright: `getBoundingClientRect()` showed the
+Employee add/edit modal correctly centered at `left:175px` (well within
+the 272px sidebar), while the rendered screenshot showed every label on
+that side truncated — e.g. "Mã nhân viên" rendering as "ân viên", "Ngày
+sinh" as "sinh". A real, reachable bug in a core CRUD workflow (Danh mục
+→ Nhân viên → Thêm/Sửa nhân viên), more severe in practice than the part-1
+checkbox-size bug: here the FORM LABELS THEMSELVES were unreadable.
+
+### Fix
+
+`.modal-backdrop`'s z-index now reads `var(--ui-z-modal, 1100)` — the
+same token the newer `.ui-modal-root` component already uses for this
+exact purpose, instead of inventing another arbitrary number. Two more
+instances of the identical pattern, found by grepping every full-viewport
+`z-index` in the file:
+
+- `#seModal` (an older Exception Center form's own id-selector override,
+  `z-index:50`) — an id selector always wins over the class rule
+  regardless of value, so the class fix alone would not have reached it.
+  Same token applied. **Caveat**: while auditing this, found that the
+  screen it belongs to (`session-exceptions.js` / `renderSessionExceptions`)
+  is superseded, legacy code — the actually-live Exception Center is
+  `exception-center.js`, which uses `.ec-drawer-shell` (already correctly
+  at `z-index:1200`, no bug there). This fix is therefore harmless but not
+  confirmed to address a live-reachable defect.
+- `.drawer-backdrop` (Session Detail drawer, `z-index:45`) — also below
+  the sidebar. Not independently visually reproduced (right-aligned,
+  720px wide, so it only reaches under the sidebar in a narrow
+  ~900–990px viewport-width band most manual testing skips), but the fix
+  is free, so applied defensively. Uses `var(--ui-z-drawer, 1000)` — the
+  token's own established role one tier below modals.
+
+### Verified
+
+- Employee add/edit modal (1050px) and Employee report modal (1180px,
+  reached via the per-row "Báo cáo" button) — both re-render fully
+  correctly (every label visible, proper centering) at 1400px desktop and
+  375px mobile, on local DEV and confirmed again live on `mesflow.net`
+  after promotion.
+- Re-swept Equipment/Add-User/PO-Operation modals — no regression from
+  the z-index change (all already cleared the sidebar by virtue of being
+  narrower, so visually unchanged, but confirmed still correct).
+- Full pytest regression suite + `tests/e2e/*.spec.js` (88 Playwright
+  specs) in the isolated QA sandbox: `QA_STATUS=PASS`, `FAILED_STEP=none`,
+  7/7 checks green. One transient e2e navigation-interrupt error in a
+  dashboard timeline spec self-resolved on the built-in retry (`retries:1`
+  in `playwright.config.js`); did not affect the overall `TEST PASS`.
+
+### Deploy
+
+Same build-once-promote-everywhere flow as part 1, next version:
+
+- **local DEV** — `71.0.0.214`, healthy.
+- **`mesflow.net`-host** — `71.0.0.214`, healthy, live-verified via HTTPS
+  (Employee modal renders correctly).
+- **`prod.mesflow.net:8299`** — `71.0.0.214` via `scripts/deploy.sh
+  prodtest 71.0.0.214` — `== DEPLOY PASS ==`, digest verified,
+  `migration_changed: 0`.
+
+All three environments' `ui.css` hash-match exactly
+(`c3c8c3270145b3e9cb7fe873afd80787`).
+
+### Scope note
+
+Did not find further clear, low-risk issues in this pass across Dashboard,
+Session Management (no session data currently loaded on any environment,
+so the Session edit drawer/modal itself — already at the correctly-high
+`z-index:1200` — could not be exercised end-to-end with real data), the
+PO create/edit/operation modals, or the Add Equipment/User modals — all
+rendered correctly, consistent with the design system's own extensive
+prior audit history already documented inline in `ui.css` (a "UI Template
+Standard v1/v2" section with several other real bugs already found and
+fixed live in earlier work: input/button height ties, `[hidden]` on
+`.btn`, toolbar control-height unification). Stopped here rather than
+continue searching without a concrete lead, per the task's own
+"không refactor rộng nếu không cần" instruction.
+
+### Commits (part 2)
+
+- `f7ee593` — `fix(ui): modal-backdrop z-index below sidebar, real content clipping`
+- `5d0f4af` — `chore: bump version to 71.0.0.214 for modal-backdrop z-index fix`
+- Merged to `main` (fast-forward, `6466cfd..5d0f4af`), pushed to `origin/main`.

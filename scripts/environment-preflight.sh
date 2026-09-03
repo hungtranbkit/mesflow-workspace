@@ -16,11 +16,33 @@ docker network inspect mesflow-edge >/dev/null 2>&1 && pass "Network mesflow-edg
 for d in /opt/mesflow /opt/mesflow/runtime /opt/mesflow/runtime/tutorials /opt/mesflow/runtime/tutorials/esp-kiosk /opt/mesflow/runtime/backups; do
   [[ -d "$d" ]] && pass "Directory $d" || bad "Directory missing: $d"
 done
+container_keys(){ docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2>/dev/null | sed 's/=.*//' || true; }
 envfile=/opt/mesflow/.env
 if [[ -f "$envfile" ]]; then
   mode="$(stat -c %a "$envfile")"; [[ "$mode" == 600 || "$mode" == 640 ]] && pass ".env permissions $mode" || bad ".env permissions $mode (expected 600/640)"
-  keys="$(sed -E '/^[[:space:]]*(#|$)/d; s/[[:space:]]*=.*$//' "$envfile" 2>/dev/null || true)"
-  for key in POSTGRES_PASSWORD DATABASE_URL MESFLOW_SECRET_KEY MESFLOW_ADMIN_PASSWORD; do grep -qx "$key" <<<"$keys" && pass "Required env key $key" || bad "Required env key missing/unreadable: $key"; done
+  # Bug found live (2026-09-02): `-f` only needs the parent directory to be
+  # searchable, not the file itself readable -- a mode-600 .env owned by a
+  # different user (the normal, correct state on a real deploy target)
+  # passes `-f` but `sed`/`cat` on it silently returns nothing (2>/dev/null
+  # swallows Permission denied), so every key below reported FAIL even
+  # though the value was genuinely configured -- a false positive from a
+  # permission-model mismatch, not a real missing value. Check readability
+  # explicitly; when unreadable, ask the running container instead (it
+  # already resolved these from the same .env at create time via
+  # env_file:, so this is real evidence, not a guess) rather than reporting
+  # "missing" for a file this user was simply never meant to read directly.
+  if [[ -r "$envfile" ]]; then
+    keys="$(sed -E '/^[[:space:]]*(#|$)/d; s/[[:space:]]*=.*$//' "$envfile" 2>/dev/null || true)"
+    for key in POSTGRES_PASSWORD DATABASE_URL MESFLOW_SECRET_KEY MESFLOW_ADMIN_PASSWORD; do
+      grep -qx "$key" <<<"$keys" && pass "Required env key $key (from .env)" || bad "Required env key missing from .env: $key"
+    done
+  else
+    app_keys="$(container_keys mesflow-app)"
+    for key in POSTGRES_PASSWORD DATABASE_URL MESFLOW_SECRET_KEY MESFLOW_ADMIN_PASSWORD; do
+      grep -qx "$key" <<<"$app_keys" && pass "Required env key $key (.env unreadable by this user; verified via mesflow-app's own resolved environment instead)" \
+        || bad "Required env key missing: $key (.env unreadable by this user, and not present in mesflow-app's resolved environment either)"
+    done
+  fi
 else bad ".env missing at $envfile"; fi
 avail_kb="$(df -Pk / | awk 'NR==2{print $4}')"; [[ "$avail_kb" -ge 10485760 ]] && pass "Disk >= 10 GiB available" || bad "Disk below 10 GiB"
 mem_kb="$(awk '/MemTotal/{print $2}' /proc/meminfo)"; [[ "$mem_kb" -ge 4194304 ]] && pass "RAM >= 4 GiB" || bad "RAM below 4 GiB"
@@ -35,7 +57,6 @@ curl -fsS --max-time 8 http://127.0.0.1:8090/health >/dev/null && pass "Deploy A
 curl -fsS --max-time 8 http://127.0.0.1:8095/api/version >/dev/null && pass "QA Center connectivity" || bad "QA Center connectivity failed"
 agent_qa="$(curl -fsS --max-time 8 http://127.0.0.1:8090/health 2>/dev/null | python3 -c 'import json,sys; print("1" if json.load(sys.stdin).get("qa",{}).get("online") else "0")' 2>/dev/null || true)"
 [[ "$agent_qa" == 1 ]] && pass "Deploy Agent can reach QA Center" || bad "Deploy Agent cannot reach QA Center"
-container_keys(){ docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2>/dev/null | sed 's/=.*//' || true; }
 grep -qx MESFLOW_AGENT_ADMIN_PASSWORD < <(container_keys mesflow-deploy-agent) && pass "Agent secret key is configured" || bad "Agent env key missing: MESFLOW_AGENT_ADMIN_PASSWORD"
 qa_container=mesflow-qa-center; docker inspect "$qa_container" >/dev/null 2>&1 || qa_container=mesflow-testcenter
 for key in MESFLOW_QA_PROFILE MESFLOW_QA_USERNAME MESFLOW_QA_PASSWORD; do grep -qx "$key" < <(container_keys "$qa_container") && pass "QA env key $key" || bad "QA env key missing: $key"; done

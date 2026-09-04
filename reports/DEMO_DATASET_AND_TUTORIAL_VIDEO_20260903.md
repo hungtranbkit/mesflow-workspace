@@ -320,6 +320,9 @@ each time a real QA gate passed:
   healthy, seeded, verified live.
 - **`mesflow.net`-host** — `71.0.0.219`, healthy (kept in sync for
   consistency; this task's own data/recording never touched it).
+  **Correction, 2026-09-04**: this line's premise was wrong — "this
+  host's `/opt/mesflow`" and "public `mesflow.net`" are not the same
+  instance. See the 2026-09-04 addendum below.
 - **`prod.mesflow.net:8299`** — `71.0.0.219` via `scripts/deploy.sh
   prodtest`, `== DEPLOY PASS ==`, digest verified, `migration_changed: 0`.
 
@@ -339,3 +342,126 @@ All four environments' changed backend files hash-match exactly
   mount — it's ephemeral container storage, so a container recreate would
   lose it; the *source* narration/spec/dataset is committed to `main` and
   fully reproducible any time via `scripts/make-user-guide-video.sh`).
+
+---
+
+## Addendum, 2026-09-04 — real `mesflow.net` still had 13 videos; root cause and what got fixed
+
+**Trigger**: user screenshot of the real, public `mesflow.net` "Video
+hướng dẫn" tab showing only 13 videos (last card `#13`), contradicting
+this report's Deploy section above.
+
+### Root cause: `/opt/mesflow` on this host is NOT public `mesflow.net`
+
+This report's own Deploy section (above, now corrected) asserted
+`mesflow.net`-host was kept in sync — inherited from
+`docs/DEPLOY_ARCHITECTURE_A.md`'s 2026-09-02 conclusion that public
+`mesflow.net` routes to this host's `/opt/mesflow`. That conclusion is
+**disproven** by a deterministic test run today, not just a stronger
+guess:
+
+1. Before touching anything, `/opt/mesflow/runtime/tutorials/manifest.json`
+   was found to already be a *third*, different set from both this
+   report's 15-chapter output and the user's 13-video screenshot: 14
+   videos, `generated_at 2026-08-21`, `mesflow_version 71.0.0.46`.
+2. **Canary test**: created `_backup_20260904_old-14ch/manifest.json`
+   directly on this host's `/opt/mesflow/runtime/tutorials/` (a path
+   nothing else could possibly have written). An authenticated request
+   to `https://mesflow.net/tutorials/_backup_20260904_old-14ch/manifest.json`
+   immediately returned **404**. The route is a plain `send_from_directory`
+   with no extra allowlist — if `mesflow.net` were this host, it would
+   have served the file. It did not.
+3. `https://mesflow.net/api/tutorials` (authenticated) returned a
+   **fourth** distinct manifest: 13 items, missing `09_kiosk_operator`
+   entirely, durations matching neither of the other two sets.
+4. `/api/system/version` matching across all instances (the 2026-09-02
+   doc's evidence) only proves the same *code* version reached each
+   place — plausible via `mesflow-deploy-agent`, confirmed still running
+   and, per `docs/DEPLOY_ARCHITECTURE_A.md`, still "what actually deploys
+   real Production today." It does not prove same host, and today's
+   canary proves they are not.
+
+`docs/DEPLOY_ARCHITECTURE_A.md` updated with a full "2026-09-04
+follow-up" section; the doc's environment table now says **unconfirmed**
+again for where `mesflow.net` really routes, matching the original
+2026-08-25 conclusion.
+
+### What was actually done, safely, without needing the real host
+
+- **Backed up** `/opt/mesflow`'s pre-existing 14-video set twice before
+  touching it: once under `_backup_20260904_old-14ch/` on the host bind
+  mount itself (durable, survives this session), once to this session's
+  local scratchpad (ephemeral, session-only, redundant safety net only).
+- **Published the full, correct 15-chapter set** (manifest.json + all 15
+  `.mp4`, sourced from `mesflow-demo-app`'s already-verified copy) onto
+  `/opt/mesflow/runtime/tutorials/` via a throwaway root `docker run`
+  bind-mounting the host path — required because `mesflow-app`'s own
+  compose mounts that path `:ro` (a deliberate hardening: the app
+  container itself cannot write its own served tutorial content).
+  Verified read-side afterward: `mesflow-app` sees exactly 15 files, the
+  manifest lists exactly 15 items ending `12/13/14`, content-only change
+  (no schema, no business data, nothing else in `/data/` touched).
+  Removed the now-stale, unreferenced old `videos/` subdirectory (backed
+  up first, per above).
+- This is real progress on a real, user-operated environment (day-to-day
+  called "prod test" per the user's own framing, 2026-09-02) — it is
+  simply not what the user's screenshot was showing.
+
+### Real production still not reachable this session
+
+Attempted the one documented lead (`~/.ssh/config`'s `Host prod`/
+`mesflow-prod` → `ssh-prod.mesflow.net`, user `kimex`, via
+`cloudflared access ssh`). Result: **Cloudflare error 1033** — "hostname
+not currently served by any active Tunnel connector." Not an auth gate;
+the tunnel itself has no live connector right now. Confirmed with the
+user, who will restart that connector and follow up. Getting the
+15-chapter set (and the KPI fix below) onto real `mesflow.net` is
+pending that.
+
+### A fourth real bug found and fixed: Employee Productivity KPI card always 0
+
+While the above was blocked, investigated the "Tổng sản lượng đạt: 0"
+quirk flagged (but not fixed) in this report's original run. Root cause:
+`static/pages/employee-productivity.js`'s KPI card reads
+`summary.total_good_qty`/`total_defect_qty`, but
+`ReportRepository.employee_productivity()`'s `summary` dict never
+computed either field — always `undefined||0` on the frontend,
+unconditionally, regardless of data (not a rare edge case; every render
+hit it). Fixed by summing `good_qty`/`defect_qty` across the
+already-computed per-employee rows. Added a regression test to
+`test_employee_productivity.py`'s existing running-session-exclusion
+case (asserts the OPEN session's quantity does not leak into the total).
+43 relevant integration tests (14 in that file + 29 in the wallboard/P1
+audit files reusing the same query) re-run against the isolated
+`compose.test.yml` stack — all pass.
+
+### Commits (2026-09-04, branch `agent/claude/prod-tutorial-sync`)
+
+- `a0a6f53` — `fix(reports): employee-productivity summary always sent good_qty=0`
+- `5232d92` — `docs(deploy): mesflow.net origin re-investigation -- 2026-09-02 correction disproven`
+- `d3da345` — `chore: bump version to 71.0.0.220 for employee-productivity summary fix`
+- Build + full `release-local-qa.sh` gate: `QA_STATUS=PASS` (354 pytest +
+  84 Playwright specs passed, 4 skipped as usual; evidence at
+  `artifacts/qa/71.0.0.220/release-local/release-local-qa.json`).
+- `prod.mesflow.net:8299` — `71.0.0.220` via `scripts/deploy.sh prodtest`,
+  `== DEPLOY PASS ==`, digest-exact, `migration_changed: 0`.
+- **Deliberately stopped there** rather than also promoting to local DEV /
+  `mesflow-demo-app` / `/opt/mesflow` in the same pass — the fix was
+  already de-prioritized behind the tutorial-production question this
+  addendum is about, and the real target (`mesflow.net`) is still
+  blocked on the tunnel; no reason to widen the blast radius further
+  before that's resolved. Promote the same digest to the remaining tiers
+  whenever convenient — no rebuild needed, same
+  `127.0.0.1:5000/mesflow-app@sha256:3242fcb...` image throughout.
+- Real `mesflow.net` promotion is pending the tunnel coming back up.
+
+### Remaining gaps, updated
+
+- Real public `mesflow.net`: still serving its own separate, older
+  13-video tutorial set and (unless separately confirmed) whatever app
+  version `mesflow-deploy-agent` last pushed there — neither today's
+  tutorial sync nor the KPI fix have reached it yet.
+- `mesflow-demo-app`'s `/data/tutorials` is still ephemeral
+  container-local storage (no bind mount) — flagged in the original run,
+  still true; `/opt/mesflow`'s copy, in contrast, is now on a real bind
+  mount and durable.

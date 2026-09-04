@@ -87,11 +87,55 @@ separate from `MESFLOW_ENV` on purpose after a past incident).
 - `c27fe91` — `chore: pass MESFLOW_TEST_AUTO_LOGIN through to the local sandbox`
 
 Build + full `release-local-qa.sh` gate: `QA_STATUS=PASS` for `71.0.0.221`
-(evidence: `artifacts/qa/71.0.0.221/release-local/release-local-qa.json`).
-**Deliberately not yet promoted** to prodtest/demo/mesflow-app — this
-task's own verification only needed the local sandbox, and further
-promotion is a follow-up deploy exactly like prior fixes this session
-(same digest, no rebuild needed, whenever convenient).
+(evidence: `.worktrees/artifacts/qa/71.0.0.221/release-local/release-local-qa.json`
+— note this landed under the workspace's shared `.worktrees/artifacts/`
+tree, not the top-level `artifacts/`, since `release-local-qa.sh` ran
+from a worktree; the digest it recorded is the one actually promoted
+below). Since promoted to prodtest and demo — see "Promotion" below.
+
+## Promotion (2026-09-04, same day, user-requested)
+
+**`prod.mesflow.net:8299` (prodtest)**: `71.0.0.220` → `71.0.0.221` via
+`scripts/deploy.sh prodtest`. One wrinkle: `release-local-qa.sh`'s build
+step (`scripts/projectflow/build.sh`) is local-only and never pushes to
+the registry, unlike `scripts/release-build.sh` — so the image
+`deploy.sh` needed wasn't there yet. Fixed by pushing the exact
+already-QA-verified local image (`docker tag` + `docker push`, no
+rebuild) and re-running `deploy.sh` with an explicit `@sha256:...` ref;
+the pushed digest matched the QA evidence's recorded digest exactly
+(`sha256:2fb566aa...`), confirming it was the same artifact the test
+gate passed, not a fresh build. `== DEPLOY PASS ==`, digest-exact,
+`migration_changed: 0`. Verified live: `/api/system/version` →
+`71.0.0.221`; `/login` still shows `data-test-auto-login="0"` (autologin
+correctly stays off there — `MESFLOW_TEST_AUTO_LOGIN` was never set on
+prodtest's `.env`, so nothing changed for existing users of that tier).
+
+**`mesflow-demo-app`**: promoted `71.0.0.219` → `71.0.0.221`, then
+`MESFLOW_TEST_AUTO_LOGIN=1` + `MESFLOW_TEST_AUTO_LOGIN_ALLOW_PRODUCTION=1`
+turned on, per explicit follow-up requests. This container is a
+standalone `docker run` (not compose-managed, no bind mounts for
+`/data/tutorials`) — a plain recreate would have destroyed the 15
+tutorial videos published earlier (they live only in its writable
+layer), so each recreate followed: back up `/data/tutorials` to host →
+confirm no DB migration needed (`git log` across the full
+`71.0.0.219..71.0.0.221` range touches zero migration files; ran the
+one-shot migration anyway, no-op as expected) → stop + rename the old
+container (kept as `mesflow-demo-app-old-71.0.0.219`, not deleted —
+rollback fallback) → `docker run` the new image with identical
+env/ports/network/restart-policy plus the two new flags → restore the
+tutorial videos.
+
+Verified live on the real container:
+- Boot log shows the intended warning: `SECURITY: MESFLOW_TEST_AUTO_LOGIN is ACTIVE on a MESFLOW_ENV=production deployment because MESFLOW_TEST_AUTO_LOGIN_ALLOW_PRODUCTION=1 is explicitly set...`
+- `POST /api/auth/test-auto-login` with no persona → admin (unchanged default).
+- `?persona=operator/viewer/manager/supervisor` → each resolves to the matching role (demo's DB already had all 5 persona-named seed accounts).
+- `?persona=root` (invalid) → `400 AUTO_LOGIN_INVALID_PERSONA`.
+- `/login?noauto=1` → `data-test-auto-login="0"`, real form, unaffected.
+- `/api/tutorials` → still 15/15 items after the recreate; `/api/system/ready` → `ok:true`, `71.0.0.221`.
+
+**Not promoted**: `/opt/mesflow` (the `mesflow-app` container, this
+host's "prod test" tier per the prior task's investigation) still runs
+`71.0.0.220` — not requested this round, left as-is.
 
 ## How to use (see `docs/AUTOLOGIN.md` for the full version)
 

@@ -122,3 +122,71 @@ Chỉ render lại đúng 1 chapter này (không đụng 14 video còn lại):
   giới hạn môi trường ad-hoc từ trước, không phải do thay đổi lần này
   (thay đổi lần này 0 dòng Python). Test liên quan trực tiếp
   (Playwright wallboard spec + tutorial module) đã chạy PASS đầy đủ.
+
+## 9) Iteration 2 — Regroup theo spec tinh gọn hơn (cùng ngày, tiếp nối §1-8)
+
+Sau khi iteration 1 (3 nhóm: Khoảng thời gian / Cấu hình hiển thị / Tự
+động hóa) lên PRODTEST, người dùng yêu cầu tinh gọn thêm: gộp lại đúng
+**2 nhóm**, đưa cả 2 checkbox tự động hóa (đầu-tháng→hôm-nay VÀ tự động
+chuyển trang) vào chung một nhóm "Tự động hóa" trên cùng một hàng, còn
+nhóm "Cấu hình hiển thị" chỉ giữ 3 trường thuần hiển thị (Sắp xếp / Số
+nhân viên mỗi trang / Số cột) — không lẫn field liên quan tới auto-flip
+nữa.
+
+**Không đổi hành vi/logic** — chỉ tổ chức lại HTML/CSS, 0 id đổi, 0
+event handler đổi, 0 dòng Python đổi:
+
+| Nhóm | Trước (iteration 1) | Sau (iteration 2) |
+|---|---|---|
+| Cấu hình hiển thị | Sắp xếp, Số NV/trang, Số cột, Thời gian mỗi trang, Làm mới dữ liệu (5 field lẫn cả auto-flip) | **Chỉ còn 3 field thuần hiển thị**: Sắp xếp, Số NV/trang, Số cột |
+| Tự động hóa | chỉ 1 checkbox "Tự động chuyển trang", đứng riêng | **Cả 2 checkbox** ("Tự động đầu-tháng→hôm-nay" + "Tự động chuyển trang") trên cùng 1 hàng (`.wallboard-toggle-row`), rồi tới field-grid (Thời gian mỗi trang, Làm mới dữ liệu), rồi dòng chú thích (chuyển từ nhóm "Khoảng thời gian" cũ sang đây vì cùng ngữ cảnh auto-flip) |
+| Khoảng thời gian | 1 nhóm riêng | **Xoá nhóm riêng** — checkbox đầu-tháng→hôm-nay dồn qua nhóm Tự động hóa, không còn 3 nhóm mà đúng 2 |
+
+File đổi: `app/mesflow/web/static/pages/employee-productivity.js` (cấu
+trúc HTML panel) + `app/mesflow/web/static/ui.css` (grid 2 cột thay vì
+3 cột, thêm `.wallboard-toggle-row`, xoá breakpoint 1180px không còn
+cần với 2 nhóm). Commit `2595925`.
+
+**Test evidence (lặp lại đầy đủ, không chỉ tin iteration 1 còn đúng):**
+- Screenshot 3 viewport: `regroup_1366x768.png` (2 khối cạnh nhau, đủ
+  chỗ), `regroup_1920x1080.png` (2 khối rộng rãi), `regroup_390x844.png`
+  + `regroup_390_scrolled.png` (2 khối xếp dọc, 2 checkbox trên cùng 1
+  hàng vẫn đọc được ở mobile nhờ `flex-wrap`, không vỡ).
+- Interaction test sống (Playwright, `test_all_controls.js`): đổi từng
+  select/checkbox trong nhóm mới, xác nhận state cập nhật đúng, "Xem
+  trước" vẫn mở đúng URL với filter hiện tại, "Trình chiếu trên Kiosk"
+  vẫn POST + cập nhật `epWbState` đúng như iteration 1 — 0 hành vi đổi.
+- Tour video (`tutorial-detailed.spec.js`, module `employeeProductivity`,
+  không sửa lại script vì regroup không đổi selector nào tour dùng):
+  chạy full tốc độ thật — **10 bước, 0 bug** (`ep-v224-render`).
+
+**Build & Deploy (nối bảng §7):**
+
+| | Trước | Sau |
+|---|---|---|
+| Image | `71.0.0.223` | **`71.0.0.224`** (commit `2595925`) |
+| Digest | `sha256:2c9f...c7eb3` | `sha256:4d8bbbf5c4a607cc67788834341cabae2323146b3db71750c172db353db3ecc2` |
+| Smoke test | — | PASS, `migration_head` không đổi (`0043_super_admin_role`) |
+| DEMO | 71.0.0.223 | **71.0.0.224**, container recreate qua `recreate-demo.sh`, mount tutorials giữ nguyên |
+| PRODTEST | 71.0.0.223 | **71.0.0.224** qua `scripts/deploy.sh prodtest 71.0.0.224` — `DEPLOY PASS`, health OK, digest khớp, migration không đổi, cron reconcile/log-retention verified present |
+| `release.json` | version field lệch (`223` trong khi build đã `224`) | đồng bộ lại `224` (commit `03688da`, qua worktree `agent/claude/release-json-sync-224`) |
+
+**Video chapter 10 (Năng suất nhân viên) — cập nhật lại lần 2:**
+Chỉ render lại đúng chapter này, không đụng 14 video còn lại. Nội dung
+tour không đổi so với iteration 1 (regroup không ảnh hưởng luồng demo
+Xem trước / Trình chiếu thật), chỉ re-render vì UI panel đổi diện mạo.
+Thời lượng: 7m21s (iteration 1) → **7m23s** (iteration 2, chênh lệch
+nhỏ do timing TTS, không do nội dung đổi). Publish lại vào cả DEMO
+(`127.0.0.1:8081`) và PRODTEST (`127.0.0.1:8299`), verify qua API thật
+(`GET /api/tutorials`, có đăng nhập) trên cả hai: **đúng 15/15**, thứ
+tự 00–14 nguyên vẹn.
+
+**Lưu ý vận hành phát hiện lại trong lần deploy này:** mật khẩu admin
+PRODTEST tiếp tục lệch khỏi giá trị dùng để verify trước đó
+(`Admin@123456`) — do `mesflow.cli reset-admin` chỉ đồng bộ DB **theo**
+biến môi trường container tại thời điểm chạy (`MESFLOW_ADMIN_PASSWORD`
+trong container, hiện là `ProdTestOnly_257091ae3a71`), nó không ghi cố
+định "Admin@123456" — nên sau lần container recreate 224 phải chạy lại
+`reset-admin` và dùng đúng mật khẩu theo biến môi trường hiện tại để
+verify API. Đây không phải lỗi mới, chỉ là hệ quả tất yếu của cách
+`reset-admin` hoạt động (đồng bộ DB theo env, không phải hằng số).

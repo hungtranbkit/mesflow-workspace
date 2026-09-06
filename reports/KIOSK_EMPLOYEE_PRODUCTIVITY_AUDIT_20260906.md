@@ -159,14 +159,23 @@ quan tới thay đổi ứng dụng thật (0 file `app/mesflow/**` bị đổi)
 
 ## 7) SPEC-GAP / OPEN QUESTION còn lại (không đoán, ghi rõ để theo dõi)
 
-- **SPEC-GAP-001**: RBAC publish demo trong video chỉ dùng tài khoản
-  admin — không có cảnh minh họa role bị từ chối (403) khi cố publish.
-  Đã có test tự động (`test_publish_forbidden_for_viewer_role`) nên
-  không phải gap về tính đúng đắn, chỉ là gap về mặt "giáo dục người
-  xem" — chưa chốt có cần thêm cảnh này vào video hay không (làm video
-  dài hơn, RBAC 403 đã có video riêng ở chapter "users"/"Người dùng &
-  Phân quyền"). **Không tự quyết** — để user xác nhận có cần bổ sung
-  không trước khi làm thêm.
+- **SPEC-GAP-001 — ĐÃ ĐÓNG (2026-09-06, cùng ngày)**: theo yêu cầu
+  người dùng, đã thêm cảnh RBAC-403 thật vào chapter 12 "Người dùng &
+  phân quyền" (không phải chapter Kiosk năng suất — đúng và hợp lý hơn
+  vì đây là chủ đề chung của RBAC, không riêng wallboard). Chuyển thật
+  sang role Viewer (`test_auto_login`, đã bật trên DEMO, tự tắt/cảnh báo
+  trên production), chứng minh cả 2 lớp: (1) mục "Người dùng" biến mất
+  khỏi menu + mở thẳng vẫn bị chặn "Không có quyền truy cập"; (2) gọi
+  thẳng `/api/users` bỏ qua UI vẫn nhận `403`. Cả 3 điểm đều có
+  **assertion cứng** (`expect(...).toHaveCount(0)`, `.toContainText(...)`,
+  `.toBe(403)`), không chỉ hiển thị chữ trong video — nếu quyền
+  `users.view` từng bị cấp nhầm cho Viewer trong tương lai, chính video
+  test này sẽ FAIL, không chỉ đổi lời thoại. `users.view`/`users.manage`
+  xác nhận là cặp quyền DUY NHẤT chỉ admin có (grep
+  `app/mesflow/db/repositories/rbac.py`), nên đây là ví dụ 403 "sạch"
+  nhất có thể minh họa bằng đúng role "Viewer: chỉ xem" chapter đã giới
+  thiệu. Commit `f77b9bd`. Video `12_users_permissions.mp4`: 1m30s →
+  **2m28s**, verify lại 15/15 trên cả DEMO và PRODTEST sau publish.
 - **SPEC-GAP-002**: chưa xác nhận độc lập biến môi trường chính xác
   đứng sau `idle_timeout_minutes`/`kiosk_idle_timeout_minutes` ở
   `session_timing` trong `RBAC_MAP.yaml` — không liên quan trực tiếp

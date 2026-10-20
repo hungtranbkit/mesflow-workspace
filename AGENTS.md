@@ -827,3 +827,10 @@ PRODUCTION TEST
 PRODUCTION
 = mesflow.net thật
 = chỉ deploy khi HUMAN APPROVAL riêng
+
+
+## Cross-project Codex / Vercel UI skills
+
+For React/Next.js UI development, UX review, and real-browser validation, use the opt-in host installer `scripts/install-codex-vercel-skills.sh` and the version-aware standards in `docs/operations/CODEX_VERCEL_AGENT_SKILLS.md`. These add React performance, component composition, web-design review, and agent-browser skills, plus Next.js version-matched documentation; they do **not** modify deployment targets.
+
+Before calling a changed user-visible interface complete, check contrast, visual hierarchy, responsive behavior, accessibility, browser interaction, regressions, and project-relevant 2.5D/3D visual quality. Keep actual screenshots/tests as evidence; never report not-run gates as passed. Global skill installation must be independently verified on each OS account/host. Existing worktree isolation, testing requirements, and explicit production-approval rules take precedence.
